@@ -1,0 +1,132 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { and, desc, eq, sql } from "drizzle-orm";
+import { z } from "zod";
+import { db } from "@/lib/db";
+import { bookings, events, paymentProofs } from "@/lib/db/schema";
+import { managedBooking } from "@/lib/queries/registrations";
+import { canManageEvents } from "@/lib/roles";
+import { getCurrentUser } from "@/lib/session";
+
+type Result = { ok: true; message: string } | { ok: false; error: string };
+
+class Refused extends Error {}
+
+async function reviewer() {
+  const user = await getCurrentUser();
+  return user && canManageEvents(user.role) ? user : null;
+}
+
+function refresh(eventId: number) {
+  revalidatePath(`/organizer/events/${eventId}/registrations`);
+  revalidatePath("/organizer");
+  revalidatePath("/bookings");
+  revalidatePath("/");
+}
+
+async function latestProofId(tx: Pick<typeof db, "select">, bookingId: number) {
+  const [p] = await tx
+    .select({ id: paymentProofs.id })
+    .from(paymentProofs)
+    .where(eq(paymentProofs.bookingId, bookingId))
+    .orderBy(desc(paymentProofs.id))
+    .limit(1);
+  return p?.id ?? null;
+}
+
+export async function approveBooking(bookingId: number): Promise<Result> {
+  const user = await reviewer();
+  if (!user) return { ok: false, error: "Only organizers can review payments." };
+  const booking = await managedBooking(user, bookingId);
+  if (!booking) return { ok: false, error: "That registration doesn't exist or isn't for your race." };
+
+  try {
+    const bib = await db.transaction(async (tx) => {
+      // lock event para walang duplicate bib
+      await tx.select({ id: events.id }).from(events).where(eq(events.id, booking.eventId)).for("update");
+      const [b] = await tx
+        .select({ status: bookings.status })
+        .from(bookings)
+        .where(eq(bookings.id, bookingId))
+        .for("update");
+      if (b?.status !== "pending") throw new Refused("This registration was already reviewed. Refresh to see its status.");
+
+      const [{ next }] = await tx
+        .select({ next: sql<number>`COALESCE(MAX(${bookings.bibNumber}), 1000) + 1`.mapWith(Number) })
+        .from(bookings)
+        .where(eq(bookings.eventId, booking.eventId));
+
+      await tx.update(bookings).set({ status: "approved", bibNumber: next }).where(eq(bookings.id, bookingId));
+      const proofId = await latestProofId(tx, bookingId);
+      if (proofId) {
+        await tx
+          .update(paymentProofs)
+          .set({ status: "approved", reviewNote: null, reviewedBy: user.id, reviewedAt: new Date() })
+          .where(eq(paymentProofs.id, proofId));
+      }
+      return next;
+    });
+    refresh(booking.eventId);
+    return { ok: true, message: `Approved. Bib ${String(bib).padStart(4, "0")} assigned.` };
+  } catch (e) {
+    if (e instanceof Refused) return { ok: false, error: e.message };
+    throw e;
+  }
+}
+
+const noteSchema = z
+  .string()
+  .trim()
+  .min(5, "Tell the runner what's wrong, at least 5 characters.")
+  .max(255, "Keep the reason under 255 characters.");
+
+export async function rejectBooking(bookingId: number, note: string): Promise<Result> {
+  const user = await reviewer();
+  if (!user) return { ok: false, error: "Only organizers can review payments." };
+  const parsed = noteSchema.safeParse(note);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+  const booking = await managedBooking(user, bookingId);
+  if (!booking) return { ok: false, error: "That registration doesn't exist or isn't for your race." };
+
+  try {
+    await db.transaction(async (tx) => {
+      const [b] = await tx
+        .select({ status: bookings.status })
+        .from(bookings)
+        .where(eq(bookings.id, bookingId))
+        .for("update");
+      if (b?.status !== "pending") throw new Refused("This registration was already reviewed. Refresh to see its status.");
+
+      await tx.update(bookings).set({ status: "rejected" }).where(eq(bookings.id, bookingId));
+      const proofId = await latestProofId(tx, bookingId);
+      if (proofId) {
+        await tx
+          .update(paymentProofs)
+          .set({ status: "rejected", reviewNote: parsed.data, reviewedBy: user.id, reviewedAt: new Date() })
+          .where(eq(paymentProofs.id, proofId));
+      }
+    });
+    refresh(booking.eventId);
+    return { ok: true, message: "Payment rejected. The runner can send a new receipt." };
+  } catch (e) {
+    if (e instanceof Refused) return { ok: false, error: e.message };
+    throw e;
+  }
+}
+
+export async function setCheckIn(bookingId: number, attended: boolean): Promise<Result> {
+  const user = await reviewer();
+  if (!user) return { ok: false, error: "Only organizers can check runners in." };
+  const booking = await managedBooking(user, bookingId);
+  if (!booking) return { ok: false, error: "That registration doesn't exist or isn't for your race." };
+
+  const res = await db
+    .update(bookings)
+    .set({ attended, checkedInAt: attended ? new Date() : null })
+    .where(and(eq(bookings.id, bookingId), eq(bookings.status, "approved")));
+  if (res[0].affectedRows === 0) return { ok: false, error: "Only confirmed runners can be checked in." };
+
+  refresh(booking.eventId);
+  return { ok: true, message: attended ? "Checked in." : "Check-in undone." };
+}
