@@ -8,7 +8,8 @@ import { getCurrentUser } from "@/lib/session";
 
 const NAV: { href: string; label: string; roles: Role[] }[] = [
   { href: "/dashboard", label: "Dashboard", roles: ["runner", "organizer", "admin"] },
-  { href: "/bookings", label: "My Bookings", roles: ["runner", "organizer", "admin"] },
+  { href: "/races", label: "Races", roles: ["runner"] },
+  { href: "/bookings", label: "My Bookings", roles: ["runner"] },
   { href: "/organizer", label: "Manage Events", roles: ["organizer", "admin"] },
   { href: "/admin", label: "Users", roles: ["admin"] },
 ];

@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
 
 const FOR_WHO = [
   {
@@ -32,15 +30,6 @@ export function About() {
                 <p className="mt-1.5 leading-relaxed text-muted-foreground">{item.text}</p>
               </div>
             ))}
-          </div>
-          <div className="mt-8 rounded-lg bg-card p-5 ring-1 ring-border">
-            <h3 className="font-display text-xl font-bold">Organizing a race?</h3>
-            <p className="mt-1 text-muted-foreground">
-              Create an account, then ask a RaceLink admin to switch it to an organizer account so you can post races.
-            </p>
-            <Link href="/login?tab=signup" scroll={false} className={buttonVariants({ variant: "outline", size: "lg", className: "mt-4" })}>
-              Create an account
-            </Link>
           </div>
         </div>
 

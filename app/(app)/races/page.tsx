@@ -1,0 +1,27 @@
+import { Suspense } from "react";
+import type { Metadata } from "next";
+import { RaceListSkeleton, Races } from "@/components/landing/races-section";
+import { getPublicEvents } from "@/lib/queries/events";
+import { requireUser } from "@/lib/session";
+
+export const metadata: Metadata = { title: "Races" };
+
+export default function RacesPage({ searchParams }: PageProps<"/races">) {
+  return (
+    <div className="grid gap-2">
+      <h1 className="font-display text-4xl font-extrabold tracking-tight">Upcoming races</h1>
+      <p className="max-w-2xl text-muted-foreground">
+        Filter by month or distance, then open a race to see fees, shirt sizes and race-day details.
+      </p>
+      <Suspense fallback={<RaceListSkeleton />}>
+        <SignedInRaces searchParams={searchParams} />
+      </Suspense>
+    </div>
+  );
+}
+
+// login muna bago makita dito
+async function SignedInRaces({ searchParams }: Pick<PageProps<"/races">, "searchParams">) {
+  await requireUser();
+  return <Races eventsPromise={getPublicEvents()} searchParams={searchParams} />;
+}

@@ -3,12 +3,12 @@ import type { PublicEvent } from "@/lib/events";
 import { getCurrentUser } from "@/lib/session";
 import { RaceBrowser } from "./race-browser";
 
-type Props = {
+export type RacesProps = {
   eventsPromise: Promise<PublicEvent[]>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export function RacesSection({ eventsPromise, searchParams }: Props) {
+export function RacesSection({ eventsPromise, searchParams }: RacesProps) {
   return (
     <section id="races" aria-labelledby="races-title" className="mx-auto w-full max-w-6xl px-4 py-20">
       <div className="max-w-2xl">
@@ -26,14 +26,14 @@ export function RacesSection({ eventsPromise, searchParams }: Props) {
   );
 }
 
-async function Races({ eventsPromise, searchParams }: Props) {
+export async function Races({ eventsPromise, searchParams }: RacesProps) {
   const [events, params, user] = await Promise.all([eventsPromise, searchParams, getCurrentUser()]);
   const requested = Number(params.event);
   const initialEventId = events.some((e) => e.id === requested) ? requested : null;
   return <RaceBrowser events={events} initialEventId={initialEventId} signedIn={!!user} />;
 }
 
-function RaceListSkeleton() {
+export function RaceListSkeleton() {
   return (
     <div className="mt-10 grid gap-3" aria-hidden>
       {[0, 1, 2].map((i) => (

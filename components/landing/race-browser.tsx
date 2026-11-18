@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { CalendarDays, Clock, FileText, MapPin, Search, Shirt, Users } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -36,6 +36,7 @@ export function RaceBrowser({ events, initialEventId, signedIn }: Props) {
   const [distance, setDistance] = useState("");
   const [openId, setOpenId] = useState<number | null>(initialEventId);
   const router = useRouter();
+  const pathname = usePathname();
 
   const months = useMemo(() => [...new Set(events.map((e) => monthKey(e.eventDate)))], [events]);
   const distances = useMemo(
@@ -60,7 +61,7 @@ export function RaceBrowser({ events, initialEventId, signedIn }: Props) {
   function openRace(id: number | null) {
     setOpenId(id);
     if (id === null && new URLSearchParams(window.location.search).has("event")) {
-      router.replace("/", { scroll: false });
+      router.replace(pathname, { scroll: false });
     }
   }
 

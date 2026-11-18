@@ -124,7 +124,7 @@ async function RunnerView({ user }: { user: CurrentUser }) {
           <div className="rounded-lg bg-card p-10 text-center ring-1 ring-border">
             <p className="font-display text-2xl font-bold">No races lined up</p>
             <p className="mt-2 text-muted-foreground">Pick a race below or browse the full list. Your bib shows up here once you&apos;re confirmed.</p>
-            <Link href="/#races" className={buttonVariants({ size: "lg", className: "mt-5" })}>
+            <Link href="/races" className={buttonVariants({ size: "lg", className: "mt-5" })}>
               Browse races
             </Link>
           </div>
@@ -158,14 +158,14 @@ async function RunnerView({ user }: { user: CurrentUser }) {
         <section className="grid gap-3">
           <div className="flex items-end justify-between gap-4">
             <h2 className="font-display text-2xl font-bold">Open for registration</h2>
-            <Link href="/#races" className="text-sm font-semibold text-primary hover:underline">
+            <Link href="/races" className="text-sm font-semibold text-primary hover:underline">
               All races
             </Link>
           </div>
           <ul className="grid gap-3 md:grid-cols-3">
             {openRaces.map((r) => (
               <li key={r.id}>
-                <Link href={`/?event=${r.id}#races`} className="grid h-full gap-1 rounded-lg bg-card p-5 ring-1 ring-border transition-colors hover:ring-primary">
+                <Link href={`/races?event=${r.id}`} className="grid h-full gap-1 rounded-lg bg-card p-5 ring-1 ring-border transition-colors hover:ring-primary">
                   <span className="text-sm text-muted-foreground">{formatDate(r.eventDate, "short")}</span>
                   <span className="font-display text-xl leading-tight font-bold">{r.title}</span>
                   <span className="text-sm text-muted-foreground">{r.location}</span>
@@ -194,8 +194,8 @@ async function OrganizerView({ user }: { user: CurrentUser }) {
             tone={totals.pending > 0 ? "amber" : undefined}
             href={firstPending ? `/organizer/events/${firstPending.id}/registrations?status=pending` : undefined}
           />
-          <Stat label="Confirmed runners" value={totals.approved} />
-          <Stat label="Fees confirmed" value={formatPeso(totals.collected)} />
+          <Stat label="Confirmed runners" value={totals.approved} href="#fees" />
+          <Stat label="Fees confirmed" value={formatPeso(totals.collected)} href="#fees" />
           <Stat label="Races open" value={totals.open} />
         </dl>
       )}
@@ -270,7 +270,71 @@ async function OrganizerView({ user }: { user: CurrentUser }) {
           </ul>
         )}
       </section>
+
+      {races.length > 0 && <FeesSection races={races} totals={totals} />}
     </>
+  );
+}
+
+type OrganizerData = Awaited<ReturnType<typeof getOrganizerDashboard>>;
+
+// breakdown ng confirmed runners at fees kada race
+function FeesSection({ races, totals }: OrganizerData) {
+  return (
+    <section id="fees" aria-labelledby="fees-title" className="grid scroll-mt-6 gap-3">
+      <div>
+        <h2 id="fees-title" className="font-display text-2xl font-bold">
+          Confirmed runners and fees
+        </h2>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          A runner counts once you approve their receipt. Fees confirmed adds up the entry fee of each approved runner&apos;s
+          distance. Runners pay outside RaceLink, so this is what their receipts show, not money RaceLink holds.
+        </p>
+      </div>
+      <div className="overflow-x-auto rounded-lg bg-card ring-1 ring-border">
+        <table className="w-full min-w-[34rem] text-sm">
+          <thead className="border-b text-left text-muted-foreground">
+            <tr>
+              <th scope="col" className="px-5 py-3 font-medium">Race</th>
+              <th scope="col" className="px-5 py-3 text-right font-medium">Confirmed runners</th>
+              <th scope="col" className="px-5 py-3 text-right font-medium">Waiting for review</th>
+              <th scope="col" className="px-5 py-3 text-right font-medium">Fees confirmed</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {races.map((r) => (
+              <tr key={r.id}>
+                <th scope="row" className="px-5 py-3 text-left font-normal">
+                  <Link href={`/organizer/events/${r.id}/registrations?status=approved`} className="font-semibold hover:underline">
+                    {r.title}
+                  </Link>
+                  <span className="block text-muted-foreground">{formatDate(r.eventDate, "short")}</span>
+                </th>
+                <td className="px-5 py-3 text-right tabular-nums">{r.approved}</td>
+                <td className="px-5 py-3 text-right tabular-nums">
+                  {r.pending > 0 ? (
+                    <Link href={`/organizer/events/${r.id}/registrations?status=pending`} className="font-semibold text-amber-800 hover:underline">
+                      {r.pending}
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground">0</span>
+                  )}
+                </td>
+                <td className="px-5 py-3 text-right font-semibold tabular-nums">{formatPeso(r.collected)}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot className="border-t bg-muted/40 font-semibold">
+            <tr>
+              <th scope="row" className="px-5 py-3 text-left">Total</th>
+              <td className="px-5 py-3 text-right tabular-nums">{totals.approved}</td>
+              <td className="px-5 py-3 text-right tabular-nums">{totals.pending}</td>
+              <td className="px-5 py-3 text-right tabular-nums">{formatPeso(totals.collected)}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
   );
 }
 

@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Register" };
 export default function RegisterPage({ params }: PageProps<"/register/[id]">) {
   return (
     <div className="grid gap-6">
-      <Link href="/#races" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link href="/races" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ChevronLeft className="size-4" aria-hidden /> All races
       </Link>
       <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
@@ -38,7 +38,7 @@ async function Register({ params }: Pick<PageProps<"/register/[id]">, "params">)
       <div className="rounded-lg bg-card p-10 text-center ring-1 ring-border">
         <h1 className="font-display text-3xl font-extrabold">{ctx.event.title}</h1>
         <p className="mt-2 text-muted-foreground">{blocked}</p>
-        <Link href="/#races" className={buttonVariants({ size: "lg", className: "mt-5" })}>
+        <Link href="/races" className={buttonVariants({ size: "lg", className: "mt-5" })}>
           See other races
         </Link>
       </div>

@@ -36,7 +36,7 @@ async function Bookings({ searchParams }: Pick<PageProps<"/bookings">, "searchPa
       <div className="rounded-lg bg-card p-10 text-center ring-1 ring-border">
         <p className="font-display text-2xl font-bold">No races yet</p>
         <p className="mt-2 text-muted-foreground">Pick a race, register, and it shows up here with your payment status.</p>
-        <Link href="/#races" className={buttonVariants({ size: "lg", className: "mt-5" })}>
+        <Link href="/races" className={buttonVariants({ size: "lg", className: "mt-5" })}>
           Browse races
         </Link>
       </div>
