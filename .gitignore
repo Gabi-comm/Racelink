@@ -43,3 +43,6 @@ next-env.d.ts
 
 # local file uploads (dev stand-in for s3)
 /.uploads
+
+# playwright test screenshots
+/.playwright-mcp

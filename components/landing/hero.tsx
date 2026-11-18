@@ -23,6 +23,7 @@ export function Hero({ eventsPromise }: { eventsPromise: Promise<PublicEvent[]> 
             </a>
             <Link
               href="/login?tab=signup"
+              scroll={false}
               className={buttonVariants({ variant: "outline", size: "lg", className: "h-11 px-5 text-base" })}
             >
               Create a runner account

@@ -49,10 +49,10 @@ async function AccountLinks() {
   }
   return (
     <>
-      <Link href="/login" className={buttonVariants({ variant: "ghost", size: "lg" })}>
+      <Link href="/login" scroll={false} className={buttonVariants({ variant: "ghost", size: "lg" })}>
         Log in
       </Link>
-      <Link href="/login?tab=signup" className={buttonVariants({ size: "lg" })}>
+      <Link href="/login?tab=signup" scroll={false} className={buttonVariants({ size: "lg" })}>
         Sign up
       </Link>
     </>

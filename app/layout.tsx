@@ -20,11 +20,12 @@ export const metadata: Metadata = {
   description: "Find a race in Metro Manila and nearby, register online, pay, and get your bib.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children, auth }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${barlow.variable} ${barlowCondensed.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         {children}
+        {auth}
         <Toaster richColors />
       </body>
     </html>

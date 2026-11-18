@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { PublicEvent } from "@/lib/events";
+import { getCurrentUser } from "@/lib/session";
 import { RaceBrowser } from "./race-browser";
 
 type Props = {
@@ -26,10 +27,10 @@ export function RacesSection({ eventsPromise, searchParams }: Props) {
 }
 
 async function Races({ eventsPromise, searchParams }: Props) {
-  const [events, params] = await Promise.all([eventsPromise, searchParams]);
+  const [events, params, user] = await Promise.all([eventsPromise, searchParams, getCurrentUser()]);
   const requested = Number(params.event);
   const initialEventId = events.some((e) => e.id === requested) ? requested : null;
-  return <RaceBrowser events={events} initialEventId={initialEventId} />;
+  return <RaceBrowser events={events} initialEventId={initialEventId} signedIn={!!user} />;
 }
 
 function RaceListSkeleton() {

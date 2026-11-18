@@ -15,7 +15,7 @@ export function SiteFooter() {
           <a href="#races" className="text-background/80 hover:text-background">Races</a>
           <a href="#how" className="text-background/80 hover:text-background">How it works</a>
           <a href="#about" className="text-background/80 hover:text-background">About us</a>
-          <Link href="/login" className="text-background/80 hover:text-background">Log in</Link>
+          <Link href="/login" scroll={false} className="text-background/80 hover:text-background">Log in</Link>
         </nav>
       </div>
     </footer>

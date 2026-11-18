@@ -14,7 +14,8 @@ const pool =
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     connectionLimit: 10,
-    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: true } : undefined,
+    // rds certs are built into mysql2
+    ssl: process.env.DB_SSL === "true" ? "Amazon RDS" : undefined,
   });
 
 if (process.env.NODE_ENV !== "production") globalForDb.pool = pool;

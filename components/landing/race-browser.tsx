@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CalendarDays, Clock, FileText, MapPin, Search, Shirt, Users } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -27,13 +28,14 @@ import {
   type PublicEvent,
 } from "@/lib/events";
 
-type Props = { events: PublicEvent[]; initialEventId: number | null };
+type Props = { events: PublicEvent[]; initialEventId: number | null; signedIn: boolean };
 
-export function RaceBrowser({ events, initialEventId }: Props) {
+export function RaceBrowser({ events, initialEventId, signedIn }: Props) {
   const [query, setQuery] = useState("");
   const [month, setMonth] = useState("");
   const [distance, setDistance] = useState("");
   const [openId, setOpenId] = useState<number | null>(initialEventId);
+  const router = useRouter();
 
   const months = useMemo(() => [...new Set(events.map((e) => monthKey(e.eventDate)))], [events]);
   const distances = useMemo(
@@ -54,12 +56,12 @@ export function RaceBrowser({ events, initialEventId }: Props) {
   const filtering = Boolean(q || month || distance);
   const selected = events.find((e) => e.id === openId) ?? null;
 
+  // replaceState dito nag-cause ng full reload sa login popup, kaya router lang
   function openRace(id: number | null) {
     setOpenId(id);
-    const url = new URL(window.location.href);
-    if (id) url.searchParams.set("event", String(id));
-    else url.searchParams.delete("event");
-    window.history.replaceState(null, "", url);
+    if (id === null && new URLSearchParams(window.location.search).has("event")) {
+      router.replace("/", { scroll: false });
+    }
   }
 
   function clearFilters() {
@@ -157,7 +159,7 @@ export function RaceBrowser({ events, initialEventId }: Props) {
       )}
 
       <Dialog open={selected !== null} onOpenChange={(open) => !open && openRace(null)}>
-        {selected && <RaceDetails event={selected} />}
+        {selected && <RaceDetails event={selected} signedIn={signedIn} />}
       </Dialog>
     </>
   );
@@ -218,7 +220,7 @@ function AvailabilityText({ event }: { event: PublicEvent }) {
   return <p className="text-sm text-muted-foreground">Registration open</p>;
 }
 
-function RaceDetails({ event }: { event: PublicEvent }) {
+function RaceDetails({ event, signedIn }: { event: PublicEvent; signedIn: boolean }) {
   const avail = availability(event);
   const start = formatTime(event.startTime);
 
@@ -310,8 +312,12 @@ function RaceDetails({ event }: { event: PublicEvent }) {
       <DialogFooter className="items-center sm:justify-between">
         {avail.open ? (
           <>
-            <p className="text-sm text-muted-foreground">You&apos;ll log in or sign up first if you haven&apos;t yet.</p>
-            <Link href={`/register/${event.id}`} className={buttonVariants({ size: "lg", className: "h-10 px-5" })}>
+            {!signedIn && <p className="text-sm text-muted-foreground">You&apos;ll log in or sign up first.</p>}
+            <Link
+              href={signedIn ? `/register/${event.id}` : `/login?next=${encodeURIComponent(`/register/${event.id}`)}`}
+              scroll={signedIn}
+              className={buttonVariants({ size: "lg", className: "h-10 px-5" })}
+            >
               Register for this race
             </Link>
           </>

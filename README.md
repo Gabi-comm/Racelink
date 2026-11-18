@@ -21,6 +21,7 @@ Marathon registration system: runners sign up for races, pay and upload proof, a
 ```bash
 npm install
 npm run db:migrate
+npm run db:seed
 npm run dev
 ```
 
@@ -35,6 +36,9 @@ Open http://localhost:3000.
 | `npm run lint` | ESLint |
 | `npm run db:generate` | Make SQL migrations from `lib/db/schema.ts` into `database/migrations` |
 | `npm run db:migrate` | Apply migrations to the database |
+| `npm run db:seed` | Load sample races and demo accounts (wipes existing data) |
 | `npm run db:studio` | Browse the database |
 
 Never commit `.env.local`, AWS keys or database passwords.
+
+Deploying to AWS: see [docs/DEPLOY.md](docs/DEPLOY.md).

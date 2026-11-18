@@ -1,35 +1,77 @@
 "use client";
 
-import { useActionState, useId, type ComponentProps } from "react";
+import { useActionState, useId, useLayoutEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSearchParams } from "next/navigation";
+import { safeNext } from "@/lib/roles";
 import { logIn, signUp, type AuthState } from "./actions";
 
-type Props = { next: string; initialTab: "login" | "signup" };
+type Props = { next: string };
 
-export function AuthForm({ next, initialTab }: Props) {
+// full page /login
+export function AuthForm(props: Props) {
   return (
     <Card className="w-full max-w-sm">
-      <Tabs defaultValue={initialTab}>
-        <CardHeader>
-          <TabsList className="w-full">
-            <TabsTrigger value="login">Log In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-          </TabsList>
-        </CardHeader>
-        <CardContent>
-          <TabsContent value="login">
-            <LogInForm next={next} />
-          </TabsContent>
-          <TabsContent value="signup">
-            <SignUpForm next={next} />
-          </TabsContent>
-        </CardContent>
-      </Tabs>
+      <CardContent>
+        <AuthPanel {...props} />
+      </CardContent>
     </Card>
+  );
+}
+
+// shared ng page at popup
+export function AuthPanel(props: Props) {
+  // basa sa url mismo, minsan luma ang server content pag reused ang route
+  const params = useSearchParams();
+  const next = params.has("next") ? safeNext(params.get("next")) : props.next;
+  const tab = params.get("tab") === "signup" ? "signup" : "login";
+  return (
+    <Tabs key={tab} defaultValue={tab} className="gap-5">
+      <TabsList className="w-full">
+        <TabsTrigger value="login">Log In</TabsTrigger>
+        <TabsTrigger value="signup">Sign Up</TabsTrigger>
+      </TabsList>
+      <AutoHeight>
+        <TabsContent value="login" className={PANEL}>
+          <LogInForm next={next} />
+        </TabsContent>
+        <TabsContent value="signup" className={PANEL}>
+          <SignUpForm next={next} />
+        </TabsContent>
+      </AutoHeight>
+    </Tabs>
+  );
+}
+
+const PANEL =
+  "animate-in fade-in-0 slide-in-from-bottom-2 duration-300 ease-out data-ending-style:hidden motion-reduce:animate-none";
+
+// smooth na height kapag nagpalit ng tab o may error
+function AutoHeight({ children }: { children: ReactNode }) {
+  const inner = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number>();
+
+  useLayoutEffect(() => {
+    const el = inner.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setHeight(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div
+      style={{ height }}
+      className="-m-1 overflow-hidden transition-[height] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none"
+    >
+      <div ref={inner} className="p-1">
+        {children}
+      </div>
+    </div>
   );
 }
 

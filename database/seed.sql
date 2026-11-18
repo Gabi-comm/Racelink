@@ -1,5 +1,5 @@
 -- sample data, password ng lahat: racelink123
--- run after migrations: mysql racelink_v2 < database/seed.sql
+-- run after migrations: npm run db:seed
 
 SET FOREIGN_KEY_CHECKS = 0;
 DELETE FROM payment_proofs;
