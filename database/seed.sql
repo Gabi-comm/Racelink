@@ -81,4 +81,4 @@ INSERT INTO payment_proofs (booking_id, file_key, amount, reference_no, status, 
   (4, 'payments/seed/booking-4.jpg', 750.00, 'GC-1004-2027', 'approved', NULL, 'seed-organizer', NOW(3));
 
 -- how runners pay, shown on the register page
-UPDATE events SET payment_instructions = 'GCash: 0917 123 4567 (Jane Smith)\nBPI: 1234 5678 90 (RaceLink Events)\nPut your full name and the race in the payment message.';
+UPDATE events SET payment_method = 'gcash', payment_account_name = 'Jane Smith', payment_account_number = '0917 123 4567', payment_instructions = 'Put your full name and the race in the payment message.';

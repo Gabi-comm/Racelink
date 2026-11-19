@@ -26,6 +26,10 @@ export async function getRegisterContext(userId: string, eventId: number) {
       registrationCloses: events.registrationCloses,
       capacity: events.capacity,
       status: events.status,
+      paymentMethod: events.paymentMethod,
+      paymentBank: events.paymentBank,
+      paymentAccountName: events.paymentAccountName,
+      paymentAccountNumber: events.paymentAccountNumber,
       paymentInstructions: events.paymentInstructions,
       registered: sql<number>`(SELECT COUNT(*) FROM bookings AS b WHERE b.event_id = ${events}.id AND b.status IN ('pending', 'approved'))`.mapWith(Number),
     })
@@ -87,6 +91,10 @@ export async function getMyBookings(userId: string) {
       eventDate: events.eventDate,
       startTime: events.startTime,
       eventStatus: events.status,
+      paymentMethod: events.paymentMethod,
+      paymentBank: events.paymentBank,
+      paymentAccountName: events.paymentAccountName,
+      paymentAccountNumber: events.paymentAccountNumber,
       paymentInstructions: events.paymentInstructions,
     })
     .from(bookings)

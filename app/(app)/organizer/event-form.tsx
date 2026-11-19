@@ -7,7 +7,16 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { EVENT_STATUS_LABEL, EVENT_STATUSES, TSHIRT_SIZES, type EventStatus, type TshirtSize } from "@/lib/constants";
+import {
+  EVENT_STATUS_LABEL,
+  EVENT_STATUSES,
+  PAYMENT_METHOD_LABEL,
+  PAYMENT_METHODS,
+  TSHIRT_SIZES,
+  type EventStatus,
+  type PaymentMethod,
+  type TshirtSize,
+} from "@/lib/constants";
 import { RACE_LENGTHS, type EventFormState } from "@/lib/event-form";
 import { uploadFile } from "@/lib/upload-client";
 import { UPLOAD_KINDS } from "@/lib/uploads";
@@ -22,6 +31,10 @@ export type EventFormValues = {
   startTime: string | null;
   registrationCloses: string | null;
   capacity: number | null;
+  paymentMethod: PaymentMethod | null;
+  paymentBank: string | null;
+  paymentAccountName: string | null;
+  paymentAccountNumber: string | null;
   paymentInstructions: string | null;
   status: EventStatus;
   bannerKey: string | null;
@@ -29,7 +42,28 @@ export type EventFormValues = {
   sizes: TshirtSize[];
 };
 
-type Row = { key: number; id: string; label: string; price: string; slots: string };
+// custom = organizer nag-type ng sariling km
+type Row = { key: number; id: string; label: string; custom: boolean; km: string; price: string; slots: string };
+
+const CUSTOM = "custom";
+
+function toRow(d: { id?: number; label: string; price?: number; slots?: number | null }): Row {
+  const custom = d.label !== "" && !RACE_LENGTHS.includes(d.label);
+  return {
+    key: nextKey++,
+    id: d.id ? String(d.id) : "",
+    label: custom ? "" : d.label,
+    custom,
+    km: custom ? String(parseFloat(d.label) || "") : "",
+    price: d.price !== undefined ? String(d.price) : "",
+    slots: d.slots ? String(d.slots) : "",
+  };
+}
+
+const rowLabel = (r: Row) => (r.custom ? (r.km.trim() ? `${r.km.trim()}KM` : "") : r.label);
+
+const SELECT =
+  "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20";
 
 const STATUS_HINT: Record<EventStatus, string> = {
   draft: "Only you can see it.",
@@ -46,9 +80,7 @@ export function EventForm({ event, bannerUrl }: { event?: EventFormValues; banne
   const err = state.fieldErrors ?? {};
 
   const [rows, setRows] = useState<Row[]>(() =>
-    event?.distances.length
-      ? event.distances.map((d) => ({ key: nextKey++, id: String(d.id), label: d.label, price: String(d.price), slots: d.slots ? String(d.slots) : "" }))
-      : [{ key: nextKey++, id: "", label: "5KM", price: "", slots: "" }],
+    event?.distances.length ? event.distances.map(toRow) : [toRow({ label: "5KM" })],
   );
   const [status, setStatus] = useState<EventStatus>(event?.status ?? "draft");
 
@@ -122,14 +154,48 @@ export function EventForm({ event, bannerUrl }: { event?: EventFormValues; banne
           {rows.map((r, i) => (
             <div key={r.key} className="grid gap-x-3 gap-y-1 sm:grid-cols-[1fr_1fr_1fr_2.25rem]">
               <input type="hidden" name="distanceId" value={r.id} />
-              <Input
-                name="distanceLabel"
-                aria-label={`Distance ${i + 1}`}
-                list="race-lengths"
-                value={r.label}
-                onChange={(e) => updateRow(r.key, { label: e.target.value })}
-                aria-invalid={!!err[`distances.${i}.label`] || undefined}
-              />
+              <input type="hidden" name="distanceLabel" value={rowLabel(r)} />
+              <div className="flex min-w-0 gap-2">
+                <select
+                  aria-label={`Distance ${i + 1}`}
+                  value={r.custom ? CUSTOM : r.label}
+                  onChange={(e) =>
+                    updateRow(r.key, e.target.value === CUSTOM ? { custom: true, label: "" } : { custom: false, label: e.target.value })
+                  }
+                  aria-invalid={!!err[`distances.${i}.label`] || undefined}
+                  className={SELECT}
+                >
+                  <option value="" disabled>
+                    Pick a distance
+                  </option>
+                  {RACE_LENGTHS.map((l) => (
+                    <option key={l} value={l} disabled={rows.some((x) => x.key !== r.key && rowLabel(x) === l)}>
+                      {l}
+                    </option>
+                  ))}
+                  <option value={CUSTOM}>Custom distance</option>
+                </select>
+                {r.custom && (
+                  <div className="relative w-28 shrink-0">
+                    <Input
+                      aria-label={`Custom distance ${i + 1} in kilometers`}
+                      type="number"
+                      min={0.1}
+                      max={999}
+                      step="0.1"
+                      inputMode="decimal"
+                      placeholder="15"
+                      value={r.km}
+                      onChange={(e) => updateRow(r.key, { km: e.target.value })}
+                      aria-invalid={!!err[`distances.${i}.label`] || undefined}
+                      className="pr-9"
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-sm text-muted-foreground">
+                      km
+                    </span>
+                  </div>
+                )}
+              </div>
               <Input
                 name="distancePrice"
                 aria-label={`Fee for distance ${i + 1}`}
@@ -170,17 +236,12 @@ export function EventForm({ event, bannerUrl }: { event?: EventFormValues; banne
               )}
             </div>
           ))}
-          <datalist id="race-lengths">
-            {RACE_LENGTHS.map((l) => (
-              <option key={l} value={l} />
-            ))}
-          </datalist>
           {err.distances && <p className="text-sm text-destructive">{err.distances}</p>}
           <Button
             type="button"
             variant="outline"
             className="justify-self-start"
-            onClick={() => setRows((rs) => [...rs, { key: nextKey++, id: "", label: "", price: "", slots: "" }])}
+            onClick={() => setRows((rs) => [...rs, toRow({ label: RACE_LENGTHS.find((l) => !rs.some((x) => rowLabel(x) === l)) ?? "" })])}
           >
             <Plus aria-hidden /> Add distance
           </Button>
@@ -188,16 +249,7 @@ export function EventForm({ event, bannerUrl }: { event?: EventFormValues; banne
       </Section>
 
       <Section title="Payment" description="Shown to runners when they register, before they upload their receipt.">
-        <Field label="How to pay" hint="GCash or bank details, the account name, and what to write in the message." error={err.paymentInstructions}>
-          <Textarea
-            name="paymentInstructions"
-            defaultValue={event?.paymentInstructions ?? ""}
-            rows={4}
-            maxLength={2000}
-            placeholder={"GCash: 0917 123 4567 (Juan Dela Cruz)\nPut your full name in the message."}
-            aria-invalid={!!err.paymentInstructions || undefined}
-          />
-        </Field>
+        <PaymentFields event={event} err={err} />
       </Section>
 
       <Section title="Shirt sizes" description="Runners pick one when they register.">
@@ -268,6 +320,72 @@ export function EventForm({ event, bannerUrl }: { event?: EventFormValues; banne
         </div>
       </div>
     </form>
+  );
+}
+
+function PaymentFields({ event, err }: { event?: EventFormValues; err: Record<string, string> }) {
+  const [method, setMethod] = useState<PaymentMethod>(event?.paymentMethod ?? "gcash");
+  const bank = method === "bank";
+  return (
+    <>
+      <fieldset>
+        <legend className="mb-1.5 text-sm font-medium">Payment method</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {PAYMENT_METHODS.map((m) => (
+            <label
+              key={m}
+              className="flex cursor-pointer items-center gap-3 rounded-lg border border-input bg-background p-3 has-checked:border-primary has-checked:bg-primary/5 has-focus-visible:ring-3 has-focus-visible:ring-ring/50"
+            >
+              <input
+                type="radio"
+                name="paymentMethod"
+                value={m}
+                checked={method === m}
+                onChange={() => setMethod(m)}
+                className="size-4 accent-primary"
+              />
+              <span className="font-semibold">{PAYMENT_METHOD_LABEL[m]}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      {bank && (
+        <Field label="Bank" hint="Like BPI, BDO or UnionBank." error={err.paymentBank} className="sm:max-w-xs">
+          <Input name="paymentBank" defaultValue={event?.paymentBank ?? ""} maxLength={100} aria-invalid={!!err.paymentBank || undefined} />
+        </Field>
+      )}
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="Account name" error={err.paymentAccountName}>
+          <Input
+            name="paymentAccountName"
+            defaultValue={event?.paymentAccountName ?? ""}
+            maxLength={150}
+            placeholder="Juan Dela Cruz"
+            aria-invalid={!!err.paymentAccountName || undefined}
+          />
+        </Field>
+        <Field label={bank ? "Account number" : "GCash number"} error={err.paymentAccountNumber}>
+          <Input
+            name="paymentAccountNumber"
+            defaultValue={event?.paymentAccountNumber ?? ""}
+            maxLength={40}
+            inputMode="numeric"
+            placeholder={bank ? "1234 5678 90" : "0917 123 4567"}
+            aria-invalid={!!err.paymentAccountNumber || undefined}
+          />
+        </Field>
+      </div>
+      <Field label="Note for runners" hint="Optional. Like what to write in the payment message." error={err.paymentInstructions}>
+        <Textarea
+          name="paymentInstructions"
+          defaultValue={event?.paymentInstructions ?? ""}
+          rows={3}
+          maxLength={2000}
+          placeholder="Put your full name and the race in the payment message."
+          aria-invalid={!!err.paymentInstructions || undefined}
+        />
+      </Field>
+    </>
   );
 }
 

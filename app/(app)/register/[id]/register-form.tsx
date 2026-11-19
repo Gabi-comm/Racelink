@@ -2,6 +2,7 @@
 
 import { useActionState, useState, useTransition, type ReactNode } from "react";
 import { CalendarDays, MapPin } from "lucide-react";
+import { PaymentDetails } from "@/components/payment-details";
 import { ReceiptPicker } from "@/components/receipt-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -132,9 +133,7 @@ export function RegisterForm({ ctx, runnerName }: { ctx: RegisterContext; runner
               <p className="font-display text-3xl font-extrabold tabular-nums">
                 {selected ? formatPeso(selected.price) : "Pick a distance first"}
               </p>
-              {event.paymentInstructions && (
-                <p className="mt-3 text-sm leading-relaxed whitespace-pre-line">{event.paymentInstructions}</p>
-              )}
+              <PaymentDetails info={event} className="mt-3" />
             </div>
             <Field label="Reference number" hint="Optional. The GCash or bank reference on your receipt." error={err.referenceNo} className="sm:max-w-sm">
               <Input name="referenceNo" maxLength={100} />

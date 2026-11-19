@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EVENT_STATUSES, TSHIRT_SIZES } from "@/lib/constants";
+import { EVENT_STATUSES, PAYMENT_METHODS, TSHIRT_SIZES } from "@/lib/constants";
 
 // shared by the event form (client) and save action (server)
 
@@ -31,7 +31,8 @@ export const distanceSchema = z.object({
     .string()
     .trim()
     .toUpperCase()
-    .regex(/^\d{1,3}(\.\d)?\s?(KM|K|MI)$/, "Write distances like 5KM or 21KM."),
+    .regex(/^\d{1,3}(\.\d)?\s?(KM|K|MI)$/, "Pick a distance, or enter a custom one in km.")
+    .refine((v) => parseFloat(v) > 0, "Distance has to be more than 0 km."),
   price: z
     .string()
     .trim()
@@ -59,17 +60,23 @@ export const eventSchema = z
       .transform((v) => (v ? `${v}:00` : null)),
     registrationCloses: optionalDate,
     capacity: optionalInt("Capacity"),
-    paymentInstructions: z
+    paymentMethod: z.enum(PAYMENT_METHODS, "Choose GCash or bank transfer."),
+    paymentBank: z.string().trim().max(100),
+    paymentAccountName: z.string().trim().min(2, "Enter the account name runners will see.").max(150, "Account name is too long."),
+    paymentAccountNumber: z
       .string()
       .trim()
-      .min(10, "Tell runners how to pay, like a GCash number and account name.")
-      .max(2000),
+      .regex(/^[\d\s-]{6,40}$/, "Enter the number using digits, spaces or dashes only."),
+    paymentInstructions: z.string().trim().max(2000, "Keep the note under 2000 characters.").transform((v) => v || null),
     status: z.enum(EVENT_STATUSES),
     sizes: z.array(z.enum(TSHIRT_SIZES)).min(1, "Pick at least one shirt size."),
     distances: z.array(distanceSchema).min(1, "Add at least one distance."),
     bannerKey: z.string().transform((v) => v || null),
   })
   .superRefine((d, ctx) => {
+    if (d.paymentMethod === "bank" && d.paymentBank.length < 2) {
+      ctx.addIssue({ code: "custom", path: ["paymentBank"], message: "Enter the bank name, like BPI or BDO." });
+    }
     if (d.registrationCloses && d.registrationCloses > d.eventDate) {
       ctx.addIssue({ code: "custom", path: ["registrationCloses"], message: "Registration has to close on or before race day." });
     }
@@ -99,6 +106,10 @@ export function readEventForm(form: FormData) {
     startTime: String(form.get("startTime") ?? ""),
     registrationCloses: String(form.get("registrationCloses") ?? ""),
     capacity: String(form.get("capacity") ?? ""),
+    paymentMethod: String(form.get("paymentMethod") ?? ""),
+    paymentBank: String(form.get("paymentBank") ?? ""),
+    paymentAccountName: String(form.get("paymentAccountName") ?? ""),
+    paymentAccountNumber: String(form.get("paymentAccountNumber") ?? ""),
     paymentInstructions: String(form.get("paymentInstructions") ?? ""),
     status: String(form.get("status") ?? ""),
     sizes: form.getAll("sizes").map(String),

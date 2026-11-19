@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PaymentDetails } from "@/components/payment-details";
 import { CalendarDays, CheckCircle2, MapPin } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { formatDate, formatPeso, formatTime } from "@/lib/events";
@@ -153,7 +154,7 @@ function StatusNote({ booking: b }: { booking: MyBooking }) {
         <p className="font-semibold">The organizer couldn&apos;t confirm your payment.</p>
         {latest?.reviewNote && <p className="mt-1">Reason: {latest.reviewNote}</p>}
         <p className="mt-1">Upload a new receipt below to send it again.</p>
-        {b.paymentInstructions && <p className="mt-2 whitespace-pre-line text-red-950/80">{b.paymentInstructions}</p>}
+        <PaymentDetails info={b} className="mt-2 text-red-950/80" />
       </div>
     );
   }

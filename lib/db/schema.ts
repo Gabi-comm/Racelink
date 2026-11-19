@@ -14,7 +14,7 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
-import { BOOKING_STATUSES, EVENT_STATUSES, GENDERS, PAYMENT_STATUSES, TSHIRT_SIZES } from "@/lib/constants";
+import { BOOKING_STATUSES, EVENT_STATUSES, GENDERS, PAYMENT_METHODS, PAYMENT_STATUSES, TSHIRT_SIZES } from "@/lib/constants";
 
 export { BOOKING_STATUSES, EVENT_STATUSES, GENDERS, PAYMENT_STATUSES, ROLES, TSHIRT_SIZES } from "@/lib/constants";
 
@@ -121,6 +121,10 @@ export const events = mysqlTable(
     startTime: time("start_time"),
     registrationCloses: date("registration_closes", { mode: "string" }),
     capacity: int("capacity"),
+    paymentMethod: mysqlEnum("payment_method", PAYMENT_METHODS),
+    paymentBank: varchar("payment_bank", { length: 100 }),
+    paymentAccountName: varchar("payment_account_name", { length: 150 }),
+    paymentAccountNumber: varchar("payment_account_number", { length: 50 }),
     paymentInstructions: text("payment_instructions"),
     bannerKey: varchar("banner_key", { length: 255 }),
     status: mysqlEnum("status", EVENT_STATUSES).default("open").notNull(),
