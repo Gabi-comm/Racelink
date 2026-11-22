@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import Form from "next/form";
 import Link from "next/link";
 import { Download, Search } from "lucide-react";
 import { FilterTabs } from "@/components/filter-tabs";
@@ -101,7 +102,7 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
             ...races.map((r) => ({ value: String(r.id), label: `${r.title} · ${formatDate(r.eventDate, "short")}` })),
           ]}
         />
-        <form className="grid gap-1" role="search">
+        <Form action="/organizer/participants" className="grid gap-1" role="search">
           <label htmlFor="participant-search" className="text-xs font-medium text-muted-foreground">
             Search
           </label>
@@ -111,7 +112,7 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
             <Input id="participant-search" name="q" defaultValue={q} placeholder="Name, email or bib" className="h-9 pl-8" />
           </div>
-        </form>
+        </Form>
         {race ? (
           <a href={`/api/events/${race.id}/registrations`} className={buttonVariants({ variant: "outline", className: "h-9" })} download>
             <Download aria-hidden /> Export CSV
@@ -147,7 +148,8 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            {/* keyed by the filters so the rows fade in again on every change */}
+            <TableBody key={`${race?.id ?? "all"}|${status}|${q}`} className="stagger">
               {shown.map((p) => (
                 <Row key={p.id} p={p} showRace={!race} />
               ))}

@@ -58,7 +58,7 @@ async function Requests({ searchParams }: Pick<PageProps<"/organizer/requests">,
           }
         />
       ) : (
-        <ul className="grid gap-4 lg:grid-cols-2">
+        <ul key={status} className="stagger grid gap-4 lg:grid-cols-2">
           {list.map((r) => (
             <RequestCard key={r.id} r={r} />
           ))}

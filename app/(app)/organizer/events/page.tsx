@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import Form from "next/form";
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
 import { EmptyState, PageHeader } from "@/components/stat";
@@ -98,11 +99,11 @@ async function Events({ searchParams }: Pick<PageProps<"/organizer/events">, "se
           label="Race timeline"
           items={TABS.map((t) => ({ href: href(t.value), label: t.label, count: rows.filter((r) => tabOf(r, today) === t.value).length, active: tab === t.value }))}
         />
-        <form className="relative w-full sm:w-72" role="search">
+        <Form action="/organizer/events" className="relative w-full sm:w-72" role="search">
           {tab !== "current" && <input type="hidden" name="tab" value={tab} />}
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input name="q" defaultValue={q} placeholder="Race, place or organization" aria-label="Search races" className="h-9 pl-8" />
-        </form>
+        </Form>
       </div>
       <p className="-mt-2 text-sm text-muted-foreground">{TABS.find((t) => t.value === tab)?.hint}</p>
 
@@ -133,7 +134,7 @@ async function Events({ searchParams }: Pick<PageProps<"/organizer/events">, "se
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody key={`${tab}|${q}`} className="stagger">
               {shown.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell className="pl-4">

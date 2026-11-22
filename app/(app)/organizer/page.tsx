@@ -39,7 +39,7 @@ async function Dashboard() {
 
   return (
     <>
-      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <dl className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat
           label="Payments to review"
           value={kpis.pending}
@@ -66,7 +66,7 @@ async function Dashboard() {
         <Stat label="Rejected payments" value={kpis.rejected} detail="Runners can send a new receipt" href="/organizer/participants?status=rejected" />
       </dl>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="stagger grid gap-4 lg:grid-cols-2">
         <Panel title="Sign-ups per week" description="New registrations, last 12 weeks">
           <WeeklyRegistrationsChart data={data.weekly} />
         </Panel>
@@ -178,7 +178,7 @@ function DashboardSkeleton() {
           <div key={i} className="h-24 rounded-lg bg-card ring-1 ring-border" />
         ))}
       </div>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="stagger grid gap-4 lg:grid-cols-2">
         <div className="h-72 rounded-lg bg-card ring-1 ring-border" />
         <div className="h-72 rounded-lg bg-card ring-1 ring-border" />
       </div>

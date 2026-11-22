@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import Form from "next/form";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft, Download, Search } from "lucide-react";
@@ -102,11 +103,11 @@ async function Registrations({
           label="Filter registrations"
           items={FILTERS.map((f) => ({ href: href(f.value), label: f.label, count: countFor(f.value), active: filter === f.value }))}
         />
-        <form className="relative w-full sm:w-64" role="search">
+        <Form action={`/organizer/events/${eventId}/registrations`} className="relative w-full sm:w-64" role="search">
           {filter !== "all" && <input type="hidden" name="status" value={filter} />}
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input name="q" defaultValue={q} placeholder="Name, email or bib" aria-label="Search runners" className="h-9 pl-8" />
-        </form>
+        </Form>
       </div>
 
       {shown.length === 0 ? (
@@ -133,7 +134,7 @@ async function Registrations({
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody key={`${filter}|${q}`} className="stagger">
               {shown.map((r) => (
                 <Row key={r.id} r={r} />
               ))}
