@@ -1,18 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, Clock, FileText, MapPin, Search, Shirt, Users } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarClock, CalendarDays, Clock, FileText, MapPin, Search, Shirt, Users, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
@@ -224,119 +217,161 @@ function AvailabilityText({ event }: { event: PublicEvent }) {
 function RaceDetails({ event, signedIn }: { event: PublicEvent; signedIn: boolean }) {
   const avail = availability(event);
   const start = formatTime(event.startTime);
+  const { day, month, weekday } = dateParts(event.eventDate);
+  const from = priceFrom(event);
+  const fill = event.capacity ? Math.min(100, Math.round((event.registered / event.capacity) * 100)) : null;
 
   return (
-    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
-      {event.hasBanner && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={`/api/events/${event.id}/banner`}
-          alt=""
-          className="-mx-4 -mt-4 aspect-[3/1] w-[calc(100%+2rem)] max-w-none rounded-t-xl object-cover"
-        />
-      )}
-      <DialogHeader>
-        <DialogTitle className="font-display text-3xl leading-tight font-extrabold">{event.title}</DialogTitle>
-        <DialogDescription className="text-base">{event.location}</DialogDescription>
-      </DialogHeader>
-
-      <dl className="grid gap-3 text-sm sm:grid-cols-2">
-        <Detail icon={CalendarDays} label="Race day" value={formatDate(event.eventDate)} />
-        {start && <Detail icon={Clock} label="Gun start" value={start} />}
-        {event.registrationCloses && (
-          <Detail icon={CalendarDays} label="Registration closes" value={formatDate(event.registrationCloses)} />
+    <DialogContent showCloseButton={false} className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+      {/* header: banner (or brand band) with the date tile and title */}
+      <div className="relative shrink-0 overflow-hidden bg-brand-deep text-white">
+        {event.hasBanner ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`/api/events/${event.id}/banner`} alt="" className="absolute inset-0 size-full object-cover" />
+        ) : (
+          <div aria-hidden className="absolute inset-0 bg-[radial-gradient(120%_140%_at_100%_0%,rgb(212_0_0/0.55),transparent_60%)]" />
         )}
-        {event.capacity !== null && (
-          <Detail icon={Users} label="Runners" value={`${event.registered} of ${event.capacity} registered`} />
-        )}
-      </dl>
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/10" />
 
-      <p className="leading-relaxed whitespace-pre-line">{event.description}</p>
+        <DialogClose
+          render={
+            <button
+              type="button"
+              className="absolute top-3 right-3 z-10 grid size-9 place-items-center rounded-full bg-black/40 text-white backdrop-blur transition-colors outline-none hover:bg-black/60 focus-visible:ring-3 focus-visible:ring-white/50"
+            />
+          }
+        >
+          <X className="size-4" aria-hidden />
+          <span className="sr-only">Close</span>
+        </DialogClose>
 
-      <div>
-        <h3 className="font-display text-xl font-bold">Distances and fees</h3>
-        <table className="mt-2 w-full text-sm">
-          <thead className="text-left text-muted-foreground">
-            <tr className="border-b">
-              <th scope="col" className="py-2 font-medium">
-                Distance
-              </th>
-              <th scope="col" className="py-2 text-right font-medium">
-                Fee
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {event.distances.map((d) => (
-              <tr key={d.id} className="border-b last:border-0">
-                <th scope="row" className="py-2 text-left font-display text-lg font-bold">
-                  {d.label}
-                </th>
-                <td className="py-2 text-right font-semibold tabular-nums">{formatPeso(d.price)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="relative flex items-end gap-4 px-5 pt-14 pb-5 sm:px-6">
+          <div className="flex w-16 shrink-0 flex-col items-center rounded-lg bg-white py-2 text-center text-[#221a1a] shadow-lg">
+            <span className="text-xs font-bold text-[#d40000] uppercase">{month}</span>
+            <span className="font-display text-3xl leading-none font-extrabold tabular-nums">{day}</span>
+            <span className="text-[11px] text-[#6b5b58]">{weekday}</span>
+          </div>
+          <div className="min-w-0">
+            <DialogTitle className="font-display text-2xl leading-tight font-extrabold text-white sm:text-3xl">{event.title}</DialogTitle>
+            <DialogDescription className="mt-1 flex items-center gap-1.5 text-sm text-white/85">
+              <MapPin className="size-4 shrink-0" aria-hidden />
+              {event.location}
+            </DialogDescription>
+          </div>
+        </div>
       </div>
 
-      {event.sizes.length > 0 && (
-        <div>
-          <h3 className="flex items-center gap-2 font-display text-xl font-bold">
-            <Shirt className="size-5" aria-hidden /> Shirt sizes
-          </h3>
-          <p className="mt-1 text-muted-foreground">{event.sizes.join(", ")}</p>
-        </div>
-      )}
+      {/* body scrolls, header and footer stay put */}
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 py-5 sm:px-6 [&>*]:shrink-0">
+        <dl className="grid gap-px overflow-hidden rounded-lg bg-border ring-1 ring-border sm:grid-cols-2">
+          <Detail icon={CalendarDays} label="Race day" value={formatDate(event.eventDate)} />
+          <Detail icon={Clock} label="Gun start" value={start ?? "To be announced"} />
+          <Detail
+            icon={CalendarClock}
+            label="Registration closes"
+            value={event.registrationCloses ? formatDate(event.registrationCloses) : "When slots run out"}
+          />
+          <Detail
+            icon={Users}
+            label="Runners"
+            value={event.capacity !== null ? `${event.registered} of ${event.capacity}` : `${event.registered} registered`}
+          >
+            {fill !== null && (
+              <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${fill}%` }} />
+              </div>
+            )}
+          </Detail>
+        </dl>
 
-      {event.documents.length > 0 && (
-        <div>
-          <h3 className="flex items-center gap-2 font-display text-xl font-bold">
-            <FileText className="size-5" aria-hidden /> Race files
-          </h3>
-          <ul className="mt-1 grid gap-1">
-            {event.documents.map((d) => (
-              <li key={d.id}>
-                <a
-                  href={`/api/events/${event.id}/documents/${d.id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-medium text-primary underline-offset-4 hover:underline"
-                >
-                  {d.title}
-                </a>
+        {event.description && <p className="leading-relaxed whitespace-pre-line text-foreground/90">{event.description}</p>}
+
+        <section>
+          <h3 className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">Distances and fees</h3>
+          <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {event.distances.map((d) => (
+              <li key={d.id} className="rounded-lg border bg-background px-4 py-3">
+                <p className="font-display text-xl leading-none font-extrabold">{d.label}</p>
+                <p className="mt-1.5 text-sm font-semibold text-primary tabular-nums">{formatPeso(d.price)}</p>
               </li>
             ))}
           </ul>
-        </div>
-      )}
+        </section>
 
-      <DialogFooter className="items-center sm:justify-between">
-        {avail.open ? (
-          <>
-            {!signedIn && <p className="text-sm text-muted-foreground">You&apos;ll log in or sign up first.</p>}
-            <Link
-              href={signedIn ? `/register/${event.id}` : `/login?next=${encodeURIComponent(`/register/${event.id}`)}`}
-              scroll={signedIn}
-              className={buttonVariants({ size: "lg", className: "h-10 px-5" })}
-            >
-              Register for this race
-            </Link>
-          </>
-        ) : (
-          <p className="font-medium text-destructive">{avail.reason}</p>
+        {event.sizes.length > 0 && (
+          <section>
+            <h3 className="flex items-center gap-2 text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+              <Shirt className="size-4" aria-hidden /> Shirt sizes
+            </h3>
+            <p className="mt-2 font-semibold">{event.sizes.join(" · ")}</p>
+          </section>
         )}
-      </DialogFooter>
+
+        {event.documents.length > 0 && (
+          <section>
+            <h3 className="flex items-center gap-2 text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+              <FileText className="size-4" aria-hidden /> Race files
+            </h3>
+            <ul className="mt-2 grid gap-1.5">
+              {event.documents.map((d) => (
+                <li key={d.id}>
+                  <a
+                    href={`/api/events/${event.id}/documents/${d.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    {d.title} <ArrowUpRight className="size-3.5" aria-hidden />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
+
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t bg-muted/50 px-5 py-4 sm:px-6">
+        <div className="min-w-0">
+          {from !== null && (
+            <p className="font-display text-lg font-bold">
+              <span className="text-sm font-normal text-muted-foreground">From </span>
+              {formatPeso(from)}
+            </p>
+          )}
+          {avail.open ? <AvailabilityText event={event} /> : <p className="text-sm font-medium text-destructive">{avail.reason}</p>}
+        </div>
+        {avail.open && (
+          <Link
+            href={signedIn ? `/register/${event.id}` : `/login?next=${encodeURIComponent(`/register/${event.id}`)}`}
+            scroll={signedIn}
+            className={buttonVariants({ size: "lg", className: "h-11 gap-1.5 px-5" })}
+          >
+            Register for this race <ArrowRight className="size-4" aria-hidden />
+          </Link>
+        )}
+      </div>
     </DialogContent>
   );
 }
 
-function Detail({ icon: Icon, label, value }: { icon: typeof CalendarDays; label: string; value: string }) {
+function Detail({
+  icon: Icon,
+  label,
+  value,
+  children,
+}: {
+  icon: typeof CalendarDays;
+  label: string;
+  value: string;
+  children?: ReactNode;
+}) {
   return (
-    <div className="flex gap-2.5">
-      <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-      <div>
-        <dt className="text-muted-foreground">{label}</dt>
-        <dd className="font-semibold">{value}</dd>
+    <div className="flex gap-2.5 bg-card p-3.5">
+      <Icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+      <div className="min-w-0 flex-1">
+        <dt className="text-xs text-muted-foreground">{label}</dt>
+        <dd className="mt-0.5 text-sm font-semibold">{value}</dd>
+        {children}
       </div>
     </div>
   );

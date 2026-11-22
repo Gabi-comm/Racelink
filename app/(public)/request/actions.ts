@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { db } from "@/lib/db";
 import { raceRequests } from "@/lib/db/schema";
 import { todayInManila } from "@/lib/events";
+import { sendRaceRequestEmail } from "@/lib/mail";
 import { REQUEST_FIELDS, raceRequestSchema, type RaceRequestState } from "@/lib/request-form";
 
 export async function submitRaceRequest(_prev: RaceRequestState, form: FormData): Promise<RaceRequestState> {
@@ -27,12 +29,18 @@ export async function submitRaceRequest(_prev: RaceRequestState, form: FormData)
     return { fieldErrors: { proposedDate: "Pick a date after today." }, values };
   }
 
+  let id: number | undefined;
   try {
-    await db.insert(raceRequests).values(parsed.data);
+    const [res] = await db.insert(raceRequests).values(parsed.data).$returningId();
+    id = res?.id;
   } catch (err) {
     console.error(err);
     return { error: "Couldn't send your request. Try again in a moment.", values };
   }
+
+  // also email the RaceLink inbox, after the response so the form doesn't wait on SMTP
+  const request = parsed.data;
+  after(() => sendRaceRequestEmail(request, id).catch((err) => console.error("[mail] race request email failed", err)));
 
   revalidatePath("/organizer/requests");
   revalidatePath("/organizer");

@@ -30,9 +30,9 @@ export function Ripple({ at }: { at: number }) {
 }
 
 // types text out, one character per step
-export function Typed({ text, at, len = 0.8, className }: { text: string; at: number; len?: number; className?: string }) {
+export function Typed({ text, at, len = 0.8, wrap, className }: { text: string; at: number; len?: number; wrap?: boolean; className?: string }) {
   return (
-    <span className={cn("demo-type", className)} style={t(at, { "--len": `${len}s`, "--n": text.length })}>
+    <span className={cn("demo-type", !wrap && "whitespace-nowrap", className)} style={t(at, { "--len": `${len}s`, "--n": text.length })}>
       {text}
     </span>
   );
@@ -104,7 +104,7 @@ export function DemoPlayer({ id, eyebrow, title, steps, action, flip, className 
   const Scene = steps[step].scene;
 
   return (
-    <section aria-labelledby={`${id}-title`} className={cn("border-t", className)}>
+    <section aria-labelledby={`${id}-title`} className={className}>
       <div className="mx-auto max-w-6xl px-4 py-20">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>

@@ -54,7 +54,6 @@ async function RunnerView({ user }: { user: CurrentUser }) {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-bold tracking-tight">Hi, {first}</h1>
-          <p className="mt-1 text-muted-foreground">Your races, bibs and anything that needs your attention.</p>
         </div>
         <Link href="/races" className={buttonVariants({ size: "lg", className: "h-10 px-4" })}>
           Find a race

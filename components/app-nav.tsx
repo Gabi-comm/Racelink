@@ -8,13 +8,18 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export type AppNavItem = { href: string; label: string; exact?: boolean; badgeKey?: "requests" };
+export type AppNavItem = {
+  href: string;
+  label: string;
+  exact?: boolean;
+  badgeKey?: "requests";
+};
 
 type Props = {
   home: string;
   items: AppNavItem[];
   badges: Record<"requests", number>;
-  user: { name: string; role: string };
+  user: { name: string; role: string; href?: string };
   logo: ReactNode;
   logout: ReactNode;
 };
@@ -24,13 +29,20 @@ export function AppNav({ home, items, badges, user, logo, logout }: Props) {
   const [open, setOpen] = useState(false);
   // longest matching prefix wins, para hindi sabay active ang /organizer at /organizer/events
   const current = items
-    .filter((i) => (i.exact ? pathname === i.href : pathname === i.href || pathname.startsWith(`${i.href}/`)))
+    .filter((i) =>
+      i.exact
+        ? pathname === i.href
+        : pathname === i.href || pathname.startsWith(`${i.href}/`),
+    )
     .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
   const badge = (item: AppNavItem) => {
     const n = item.badgeKey ? badges[item.badgeKey] : 0;
     return n > 0 ? (
-      <span className="ml-1.5 text-xs font-bold text-primary tabular-nums" aria-label={`${n} waiting`}>
+      <span
+        className="ml-1.5 text-xs font-bold text-primary tabular-nums"
+        aria-label={`${n} waiting`}
+      >
         {n}
       </span>
     ) : null;
@@ -42,7 +54,10 @@ export function AppNav({ home, items, badges, user, logo, logout }: Props) {
         {logo}
       </Link>
 
-      <nav aria-label="Main" className="hidden flex-1 items-stretch gap-1 self-stretch lg:flex">
+      <nav
+        aria-label="Main"
+        className="hidden flex-1 items-stretch gap-1 self-stretch lg:flex"
+      >
         {items.map((item) => (
           <Link
             key={item.href}
@@ -57,10 +72,28 @@ export function AppNav({ home, items, badges, user, logo, logout }: Props) {
       </nav>
 
       <div className="ml-auto hidden items-center gap-3 lg:flex">
-        <div className="text-right leading-tight">
-          <p className="text-sm font-semibold">{user.name}</p>
-          <p className="text-xs text-muted-foreground">{user.role}</p>
-        </div>
+        {user.href ? (
+          <Link
+            href={user.href}
+            aria-current={pathname === user.href ? "page" : undefined}
+            className="group flex items-center gap-2.5 rounded-lg py-1 pr-2 pl-1 transition-colors outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:bg-muted"
+          >
+            <Avatar name={user.name} />
+            <span className="text-left leading-tight">
+              <span className="block text-sm font-semibold group-hover:text-primary group-aria-[current=page]:text-primary">
+                {user.name}
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                View profile
+              </span>
+            </span>
+          </Link>
+        ) : (
+          <div className="text-right leading-tight">
+            <p className="text-sm font-semibold">{user.name}</p>
+            <p className="text-xs text-muted-foreground">{user.role}</p>
+          </div>
+        )}
         <ThemeToggle />
         {logout}
       </div>
@@ -79,31 +112,82 @@ export function AppNav({ home, items, badges, user, logo, logout }: Props) {
       </Button>
 
       {open && (
-        <div id="app-menu" className="absolute inset-x-0 top-16 border-b bg-background px-4 pt-2 pb-4 shadow-sm lg:hidden">
-          <nav aria-label="Main mobile" className="grid gap-1">
-            {items.map((item) => (
+        <div
+          id="app-menu"
+          className="absolute inset-x-0 top-16 border-b bg-background px-4 pt-2 pb-4 shadow-sm lg:hidden"
+        >
+          {items.length > 0 && (
+            <nav aria-label="Main mobile" className="grid gap-1">
+              {items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  aria-current={current === item.href ? "page" : undefined}
+                  className={cn(
+                    "flex items-center rounded-md px-3 py-2.5 font-medium hover:bg-muted aria-[current=page]:text-primary",
+                  )}
+                >
+                  {item.label}
+                  {badge(item)}
+                </Link>
+              ))}
+            </nav>
+          )}
+          <div
+            className={cn(
+              "flex items-center justify-between gap-3",
+              items.length > 0 && "mt-3 border-t pt-3",
+            )}
+          >
+            {user.href ? (
               <Link
-                key={item.href}
-                href={item.href}
+                href={user.href}
                 onClick={() => setOpen(false)}
-                aria-current={current === item.href ? "page" : undefined}
-                className={cn("flex items-center rounded-md px-3 py-2.5 font-medium hover:bg-muted aria-[current=page]:text-primary")}
+                aria-current={pathname === user.href ? "page" : undefined}
+                className="flex min-w-0 items-center gap-2.5 rounded-md py-1 pr-2 text-sm hover:text-primary aria-[current=page]:text-primary"
               >
-                {item.label}
-                {badge(item)}
+                <Avatar name={user.name} />
+                <span className="min-w-0 leading-tight">
+                  <span className="block truncate font-semibold">
+                    {user.name}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    View profile
+                  </span>
+                </span>
               </Link>
-            ))}
-          </nav>
-          <div className="mt-3 flex items-center justify-between gap-3 border-t pt-3">
-            <p className="flex items-center gap-2 text-sm">
-              <UserRound className="size-4 text-muted-foreground" aria-hidden />
-              <span className="font-semibold">{user.name}</span>
-              <span className="text-muted-foreground">· {user.role}</span>
-            </p>
+            ) : (
+              <p className="flex items-center gap-2 text-sm">
+                <UserRound
+                  className="size-4 text-muted-foreground"
+                  aria-hidden
+                />
+                <span className="font-semibold">{user.name}</span>
+                <span className="text-muted-foreground">· {user.role}</span>
+              </p>
+            )}
             {logout}
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+function Avatar({ name }: { name: string }) {
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+  return (
+    <span
+      aria-hidden
+      className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-deep text-xs font-bold text-white"
+    >
+      {initials}
+    </span>
   );
 }

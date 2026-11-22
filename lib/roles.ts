@@ -12,8 +12,9 @@ export function isRole(value: unknown): value is Role {
   return value === "runner" || value === "organizer" || value === "admin";
 }
 
+// admins only manage user accounts; races, payments and requests are organizer work
 export function canManageEvents(role: Role) {
-  return role === "organizer" || role === "admin";
+  return role === "organizer";
 }
 
 // where each role lands after login; the public site is off-limits while signed in

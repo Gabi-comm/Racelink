@@ -21,7 +21,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/api/receipts
     .where(eq(paymentProofs.id, id))
     .limit(1);
 
-  const allowed = row && (row.runnerId === user.id || row.organizerId === user.id || user.role === "admin");
+  const allowed = row && (row.runnerId === user.id || row.organizerId === user.id);
   if (!allowed) return new Response("Not found", { status: 404 });
 
   return Response.redirect(new URL(await fileUrl(row.key), request.url), 302);

@@ -1,5 +1,6 @@
-import { Suspense } from "react";
+import { Suspense, type CSSProperties } from "react";
 import type { Metadata } from "next";
+import Form from "next/form";
 import Link from "next/link";
 import { Ban, Search } from "lucide-react";
 import { StatusMark } from "@/components/status-badge";
@@ -20,7 +21,6 @@ export default function AdminPage({ searchParams }: PageProps<"/admin">) {
     <div className="grid gap-6">
       <div>
         <h1 className="font-display text-3xl font-bold tracking-tight">Users</h1>
-        <p className="mt-1 text-muted-foreground">Change what each account can do, or ban an account that shouldn&apos;t have access.</p>
       </div>
       <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
         <Users searchParams={searchParams} />
@@ -70,6 +70,8 @@ async function Users({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
   };
   // tab counts follow the other filters, so the numbers match what you'd see
   const countFor = (r: Role | "all") => (r === "all" ? bySearch.length : bySearch.filter((u) => u.role === r).length);
+  // changes whenever the filters do, so the list replays its fade-in
+  const listKey = `${role}|${status}|${sort}|${q}`;
   const joined = new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeZone: "Asia/Manila" });
 
   return (
@@ -84,7 +86,7 @@ async function Users({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
         }))}
       />
       <div className="grid gap-3 rounded-lg bg-card p-4 ring-1 ring-border sm:grid-cols-[1fr_11rem_11rem] sm:items-end">
-        <form className="grid gap-1" role="search">
+        <Form action="/admin" className="grid gap-1" role="search">
           <label htmlFor="user-search" className="text-xs font-medium text-muted-foreground">
             Search
           </label>
@@ -95,13 +97,17 @@ async function Users({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
             <Input id="user-search" name="q" defaultValue={q} placeholder="Name or email" className="h-9 pl-8" />
           </div>
-        </form>
+        </Form>
         <UrlSelect param="status" label="Status" value={status} options={STATUS_OPTIONS} />
         <UrlSelect param="sort" label="Sort" value={sort} options={SORT_OPTIONS} />
       </div>
       <div className="-mt-2 flex items-center justify-between gap-3 text-sm text-muted-foreground">
+        {/* count pops when it changes */}
         <p>
-          Showing <span className="font-semibold text-foreground tabular-nums">{shown.length}</span> of {list.length} accounts
+          Showing{" "}
+          <span key={shown.length} className="demo-pop inline-block font-semibold text-foreground tabular-nums">
+            {shown.length}
+          </span> of {list.length} accounts
         </p>
         {filtered && (
           <Link href="/admin" className="font-medium text-primary hover:underline">
@@ -111,7 +117,7 @@ async function Users({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
       </div>
 
       {shown.length === 0 ? (
-        <div className="rounded-lg bg-card p-10 text-center ring-1 ring-border">
+        <div key={listKey} className="row-in rounded-lg bg-card p-10 text-center ring-1 ring-border">
           <p className="font-display text-2xl font-bold">No users match</p>
           <p className="mt-2 text-muted-foreground">Try another role or status, or clear the search.</p>
         </div>
@@ -130,11 +136,15 @@ async function Users({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {shown.map((u) => {
+            <TableBody key={listKey}>
+              {shown.map((u, i) => {
                 const self = u.id === me.id;
                 return (
-                  <TableRow key={u.id} className={cn(u.banned && "bg-destructive/[0.03]")}>
+                  <TableRow
+                    key={u.id}
+                    className={cn("row-in transition-colors duration-300", u.banned && "bg-destructive/[0.03]")}
+                    style={{ "--i": Math.min(i, 14) } as CSSProperties}
+                  >
                     <TableCell className="pl-4">
                       <p className="flex items-center gap-2 font-semibold">
                         {u.name}

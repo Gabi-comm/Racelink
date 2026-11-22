@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useId, useState, type ComponentProps, type CSSProperties, type ReactNode } from "react";
+import { useActionState, useEffect, useId, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import Link from "next/link";
-import { CheckCircle2, Info } from "lucide-react";
-import { Typed } from "@/components/landing/demo-kit";
+import { CheckCircle2, Info, MessageCircle, X } from "lucide-react";
+import { Typed, t } from "@/components/landing/demo-kit";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,9 +54,9 @@ export function RequestForm({ minDate }: { minDate: string }) {
         <Field label="Race name" {...field("raceTitle")} className="sm:col-span-2" />
         <Field label="Preferred date" type="date" min={minDate} {...field("proposedDate")} />
         <Field label="Expected runners" type="number" inputMode="numeric" min={1} {...field("expectedRunners")} optional />
-        <Field label="Location" {...field("location")} hint="City or venue, like Roxas Blvd, Manila." className="sm:col-span-2" />
-        <Field label="Distances" {...field("distances")} hint="For example 3K, 5K, 10K." optional className="sm:col-span-2" />
-        <TextField label="Anything else we should know" {...field("message")} hint="Purpose of the run, sponsors, permits you already have." />
+        <Field label="Location" {...field("location")} className="sm:col-span-2" />
+        <Field label="Distances" {...field("distances")} optional className="sm:col-span-2" />
+        <TextField label="Anything else we should know" {...field("message")} />
       </Fieldset>
 
       {state.error && (
@@ -76,8 +76,8 @@ export function RequestForm({ minDate }: { minDate: string }) {
 // what each field is for, plus an example that types itself out when the guide opens
 const GUIDES: Record<RaceRequestField, { tip: string; example: string }> = {
   organization: { tip: "The school, barangay, company or club that is hosting the run.", example: "UE Caloocan Student Council" },
-  contactName: { tip: "The person an organizer should talk to about this race.", example: "Kyla Fernandez" },
-  email: { tip: "We reply to your request here, so use an inbox you check often.", example: "kyla.fernandez@example.com" },
+  contactName: { tip: "The person an organizer should talk to about this race.", example: "Janessa Manuel" },
+  email: { tip: "We reply to your request here, so use an inbox you check often.", example: "janessa.manuel@example.com" },
   phone: { tip: "Optional. Useful for quick questions while the race is being set up.", example: "0917 123 4567" },
   raceTitle: { tip: "What the race should be called. You can still change it before registration opens.", example: "UE Warriors Fun Run" },
   proposedDate: { tip: "The day you'd like to hold the race. It has to be a future date.", example: "Sunday, July 12, 2027" },
@@ -90,50 +90,98 @@ const GUIDES: Record<RaceRequestField, { tip: string; example: string }> = {
 function FieldLabel({ id, name, label, optional }: { id: string; name: RaceRequestField; label: string; optional?: boolean }) {
   const [open, setOpen] = useState(false);
   const [plays, setPlays] = useState(0);
+  const [below, setBelow] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
   const guide = GUIDES[name];
+
+  // close like a chat popup: click outside or press Escape
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (!wrap.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   return (
-    <>
-      <div className="flex items-center gap-1.5">
-        <Label htmlFor={id}>
+    <div ref={wrap} className="relative flex items-center gap-1.5">
+      <Label htmlFor={id}>
+        {/* one text run so "(optional)" wraps with the label instead of floating right */}
+        <span>
           {label}
           {optional && <span className="font-normal text-muted-foreground"> (optional)</span>}
-        </Label>
-        <button
-          type="button"
-          onClick={() => {
-            setOpen((o) => !o);
-            setPlays((n) => n + 1);
-          }}
-          aria-expanded={open}
-          aria-controls={`${id}-guide`}
-          className="inline-flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:text-primary"
-        >
-          <Info className="size-4" aria-hidden />
-          <span className="sr-only">How to fill in {label}</span>
-        </button>
-      </div>
+        </span>
+      </Label>
+      <button
+        type="button"
+        onClick={(e) => {
+          // open upward like a chat bubble, unless the sticky header would cover it
+          setBelow(e.currentTarget.getBoundingClientRect().top < 300);
+          setOpen((o) => !o);
+          setPlays((n) => n + 1);
+        }}
+        aria-expanded={open}
+        aria-controls={`${id}-guide`}
+        className="inline-flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:text-primary"
+      >
+        <Info className="size-4" aria-hidden />
+        <span className="sr-only">How to fill in {label}</span>
+      </button>
+
       {open && (
         <div
           key={plays}
           id={`${id}-guide`}
-          role="note"
-          className="demo-in rounded-md border-l-2 border-primary bg-muted/60 px-3 py-2"
+          role="status"
+          className={`demo-pop absolute left-0 z-30 w-[21rem] max-w-full sm:max-w-none rounded-2xl border bg-popover p-3 text-popover-foreground shadow-xl ${
+            below ? "top-full mt-2 origin-top-left rounded-tl-sm" : "bottom-full mb-2 origin-bottom-left rounded-bl-sm"
+          }`}
         >
-          <p className="demo-in text-sm" style={{ "--at": "0.1s" } as CSSProperties}>
-            {guide.tip}
-          </p>
-          <p className="demo-in mt-1.5 flex flex-wrap items-baseline gap-x-1.5 text-xs text-muted-foreground" style={{ "--at": "0.35s" } as CSSProperties}>
-            Example:
-            <Typed
-              text={guide.example}
-              at={0.6}
-              len={Math.min(1.4, 0.04 * guide.example.length + 0.2)}
-              className="font-semibold text-foreground"
-            />
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+              <MessageCircle className="size-3.5" aria-hidden />
+            </span>
+            <p className="text-xs font-semibold">RaceLink guide</p>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="ml-auto inline-flex size-6 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <X className="size-3.5" aria-hidden />
+              <span className="sr-only">Close guide</span>
+            </button>
+          </div>
+
+          <div className="mt-2.5 grid grid-cols-[minmax(0,1fr)] justify-items-start gap-1.5 pl-9">
+            {/* "typing..." dots, then the messages */}
+            <span aria-hidden className="demo-out absolute mt-1 inline-flex gap-1 rounded-2xl rounded-tl-sm bg-muted px-3 py-2.5" style={t(0.75)}>
+              <span className="chat-dot size-1.5 rounded-full bg-muted-foreground" />
+              <span className="chat-dot size-1.5 rounded-full bg-muted-foreground [animation-delay:0.15s]" />
+              <span className="chat-dot size-1.5 rounded-full bg-muted-foreground [animation-delay:0.3s]" />
+            </span>
+            <p className="demo-in max-w-full rounded-2xl rounded-tl-sm bg-muted px-3 py-2 text-sm leading-snug break-words" style={t(0.8)}>
+              {guide.tip}
+            </p>
+            <p className="demo-in max-w-full rounded-2xl rounded-tl-sm bg-muted px-3 py-2 text-xs text-muted-foreground" style={t(1.25)}>
+              Example:{" "}
+              <Typed
+                text={guide.example}
+                at={1.45}
+                len={Math.min(1.4, 0.04 * guide.example.length + 0.2)}
+                wrap
+                className="align-bottom font-semibold break-words text-foreground"
+              />
+            </p>
+          </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

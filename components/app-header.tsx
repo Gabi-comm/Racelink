@@ -16,13 +16,13 @@ const ORGANIZER: AppNavItem[] = [
 
 const NAV: Record<Role, AppNavItem[]> = {
   runner: [
-    { href: "/dashboard", label: "Home" },
+    { href: "/dashboard", label: "Dashboard" },
     { href: "/races", label: "Races" },
     { href: "/bookings", label: "My Bookings" },
-    { href: "/profile", label: "Profile" },
   ],
   organizer: ORGANIZER,
-  admin: [...ORGANIZER, { href: "/admin", label: "Users" }],
+  // admin only manages users, so no tabs: /admin is their whole app
+  admin: [],
 };
 
 export function AppHeader() {
@@ -55,7 +55,8 @@ async function UserNav() {
       home={homeFor(user.role)}
       items={NAV[user.role]}
       badges={{ requests: pending }}
-      user={{ name: user.name, role: ROLE_LABEL[user.role] }}
+      // runners open their profile by clicking their name
+      user={{ name: user.name, role: ROLE_LABEL[user.role], href: user.role === "runner" ? "/profile" : undefined }}
       logo={<Logo className="h-10" priority />}
       logout={<LogOutButton />}
     />

@@ -32,7 +32,7 @@ export default function OrganizerDashboardPage() {
 }
 
 async function Dashboard() {
-  const user = await requireUser("organizer", "admin");
+  const user = await requireUser("organizer");
   const data = await getOrganizerAnalytics(user);
   const { kpis } = data;
   const scope = user.role === "admin" ? "all races" : "your races";

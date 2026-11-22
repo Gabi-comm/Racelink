@@ -10,9 +10,6 @@ export default function RacesPage({ searchParams }: PageProps<"/races">) {
   return (
     <div className="grid gap-2">
       <h1 className="font-display text-3xl font-bold tracking-tight">Find a race</h1>
-      <p className="max-w-2xl text-muted-foreground">
-        Filter by month or distance, then open a race to see fees, shirt sizes and race-day details.
-      </p>
       <Suspense fallback={<RaceListSkeleton />}>
         <SignedInRaces searchParams={searchParams} />
       </Suspense>

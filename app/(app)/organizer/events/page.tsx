@@ -49,7 +49,7 @@ export default function ManageEventsPage({ searchParams }: PageProps<"/organizer
 }
 
 async function Events({ searchParams }: Pick<PageProps<"/organizer/events">, "searchParams">) {
-  const user = await requireUser("organizer", "admin");
+  const user = await requireUser("organizer");
   const [rows, query] = await Promise.all([getManagedEvents(user), searchParams]);
   const isAdmin = user.role === "admin";
   const today = todayInManila();

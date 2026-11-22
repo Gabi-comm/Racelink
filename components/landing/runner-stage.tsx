@@ -240,7 +240,7 @@ export function RunnerStage() {
   }, []);
 
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[32rem]">
+    <div className="relative mx-auto aspect-square w-[min(100%,32rem,calc(100svh-10rem))]">
       <canvas
         ref={canvasRef}
         role="img"

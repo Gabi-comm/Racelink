@@ -28,7 +28,7 @@ export default function EditEventPage({ params, searchParams }: PageProps<"/orga
 }
 
 async function Editor({ params, searchParams }: Pick<PageProps<"/organizer/events/[id]">, "params" | "searchParams">) {
-  const user = await requireUser("organizer", "admin");
+  const user = await requireUser("organizer");
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const eventId = Number(id);
   if (!Number.isInteger(eventId)) notFound();

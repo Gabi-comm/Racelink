@@ -2,11 +2,11 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PaymentDetails } from "@/components/payment-details";
-import { Ban, CalendarDays, CheckCircle2, MapPin } from "lucide-react";
+import { Ban, CalendarDays, CheckCircle2, Hourglass, MapPin, Receipt, Route, Shirt, Wallet } from "lucide-react";
 import { RaceProgress } from "@/components/runner/race-progress";
 import { BookingStatusMark, StatusMark } from "@/components/status-badge";
 import { buttonVariants } from "@/components/ui/button";
-import { formatDate, formatPeso, formatTime, todayInManila } from "@/lib/events";
+import { dateParts, formatDate, formatPeso, formatTime, todayInManila } from "@/lib/events";
 import { getMyBookings, type MyBooking } from "@/lib/queries/bookings";
 import { requireUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
@@ -20,7 +20,6 @@ export default function BookingsPage({ searchParams }: PageProps<"/bookings">) {
     <div className="grid gap-6">
       <div>
         <h1 className="font-display text-3xl font-bold tracking-tight">My bookings</h1>
-        <p className="mt-1 text-muted-foreground">Your race registrations, payment status and bib numbers.</p>
       </div>
       <Suspense fallback={<div className="h-64 rounded-lg bg-card ring-1 ring-border" />}>
         <Bookings searchParams={searchParams} />
@@ -98,87 +97,135 @@ function BookingCard({ booking: b, highlight }: { booking: MyBooking; highlight:
   const latest = b.proofs[0];
   const start = formatTime(b.startTime);
   const raceCancelled = b.eventStatus === "cancelled";
+  const { day, month, weekday } = dateParts(b.eventDate);
+  const inactive = b.status === "cancelled" || raceCancelled;
+  const hasBib = b.status === "approved" && b.bibNumber !== null;
+  const showReceipt = latest && b.status !== "cancelled";
+  const canCancel = b.status === "pending" || b.status === "rejected";
+  const canRegisterAgain = b.status === "cancelled" && b.eventStatus === "open";
 
   return (
     <li
       id={`booking-${b.id}`}
       className={cn(
-        "grid scroll-mt-24 gap-5 rounded-lg bg-card p-5 ring-1 ring-border md:grid-cols-[1fr_auto] md:p-6",
+        "scroll-mt-24 overflow-hidden rounded-xl bg-card ring-1 ring-border transition-shadow hover:shadow-[0_12px_32px_-20px_rgb(0_0_0/0.35)]",
         highlight && "ring-2 ring-primary",
       )}
     >
-      <div className="grid gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <BookingStatusMark status={b.status} label={STATUS_LABEL[b.status]} />
-          {raceCancelled && (
-            <StatusMark tone="danger" icon={Ban}>
-              Race cancelled
-            </StatusMark>
-          )}
-        </div>
-        <div>
-          <h3 className="font-display text-xl leading-tight font-bold">{b.title}</h3>
-          <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <CalendarDays className="size-4" aria-hidden />
-              {formatDate(b.eventDate)}
-              {start && `, ${start}`}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <MapPin className="size-4" aria-hidden />
-              {b.location}
-            </span>
-          </p>
-        </div>
-        <dl className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
-          <div>
-            <dt className="text-muted-foreground">Distance</dt>
-            <dd className="font-display text-lg font-bold">{b.distanceLabel}</dd>
+      <div className="grid gap-5 p-5 md:grid-cols-[1fr_auto] md:gap-8 md:p-6">
+        <div className="grid min-w-0 gap-5">
+          {/* header: date tile + race */}
+          <div className="flex gap-4">
+            <div
+              className={cn(
+                "flex w-16 shrink-0 flex-col items-center self-start rounded-lg border bg-background py-2 text-center",
+                inactive && "opacity-60",
+              )}
+            >
+              <span className="text-xs font-bold text-primary uppercase">{month}</span>
+              <span className="font-display text-3xl leading-none font-extrabold tabular-nums">{day}</span>
+              <span className="text-[11px] text-muted-foreground">{weekday}</span>
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <BookingStatusMark status={b.status} label={STATUS_LABEL[b.status]} />
+                {raceCancelled && (
+                  <StatusMark tone="danger" icon={Ban}>
+                    Race cancelled
+                  </StatusMark>
+                )}
+              </div>
+              <h3 className={cn("mt-1 font-display text-xl leading-tight font-bold md:text-2xl", inactive && "text-muted-foreground")}>
+                {b.title}
+              </h3>
+              <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <CalendarDays className="size-4 shrink-0" aria-hidden />
+                  {formatDate(b.eventDate)}
+                  {start && `, ${start}`}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="size-4 shrink-0" aria-hidden />
+                  {b.location}
+                </span>
+              </p>
+            </div>
           </div>
-          <div>
-            <dt className="text-muted-foreground">Shirt</dt>
-            <dd className="font-display text-lg font-bold">{b.tshirtSize}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Fee</dt>
-            <dd className="font-display text-lg font-bold tabular-nums">{formatPeso(b.price)}</dd>
-          </div>
-        </dl>
 
-        {!raceCancelled && <RaceProgress status={b.status} attended={b.attended} className="max-w-xl" />}
+          {/* what they signed up for */}
+          <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-lg bg-border ring-1 ring-border">
+            <Fact icon={Route} label="Distance" value={b.distanceLabel} />
+            <Fact icon={Shirt} label="Shirt" value={b.tshirtSize} />
+            <Fact icon={Wallet} label="Fee" value={formatPeso(b.price)} />
+          </dl>
 
-        <StatusNote booking={b} />
+          {!raceCancelled && <RaceProgress status={b.status} attended={b.attended} />}
 
-        {latest && b.status !== "cancelled" && (
-          <a href={`/api/receipts/${latest.id}`} target="_blank" rel="noreferrer" className="justify-self-start text-sm font-medium text-primary hover:underline">
-            View your latest receipt
-          </a>
-        )}
+          <StatusNote booking={b} />
 
-        {b.status === "rejected" && !raceCancelled && <ResubmitForm bookingId={b.id} />}
-
-        <div className="flex flex-wrap gap-2">
-          {(b.status === "pending" || b.status === "rejected") && <CancelBookingButton bookingId={b.id} title={b.title} />}
-          {b.status === "cancelled" && b.eventStatus === "open" && (
-            <Link href={`/register/${b.eventId}`} className={buttonVariants({ variant: "outline" })}>
-              Register again
-            </Link>
-          )}
+          {b.status === "rejected" && !raceCancelled && <ResubmitForm bookingId={b.id} />}
         </div>
+
+        {/* bib: the real one once confirmed, an empty slot while the payment is checked */}
+        {hasBib ? (
+          <MiniBib number={b.bibNumber!} attended={b.attended} className="md:mt-1 md:justify-self-end" />
+        ) : b.status === "pending" && !raceCancelled ? (
+          <div className="hidden w-44 self-start rounded-md border-2 border-dashed p-4 text-center md:mt-1 md:block md:justify-self-end">
+            <Hourglass className="mx-auto size-5 text-muted-foreground" aria-hidden />
+            <p className="mt-2 text-sm font-semibold">Bib number</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Assigned once your payment is approved</p>
+          </div>
+        ) : null}
       </div>
 
-      {b.status === "approved" && b.bibNumber !== null && <MiniBib number={b.bibNumber} attended={b.attended} className="md:justify-self-end" />}
+      {(showReceipt || canCancel || canRegisterAgain) && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t bg-muted/40 px-5 py-2.5 md:px-6">
+          {showReceipt ? (
+            <a
+              href={`/api/receipts/${latest.id}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              <Receipt className="size-4" aria-hidden /> View your latest receipt
+            </a>
+          ) : (
+            <span />
+          )}
+          {/* -mx lines the ghost button's text up with the card edge */}
+          <div className="-mx-2.5 flex flex-wrap gap-2">
+            {canCancel && <CancelBookingButton bookingId={b.id} title={b.title} />}
+            {canRegisterAgain && (
+              <Link href={`/register/${b.eventId}`} className={buttonVariants({ variant: "outline" })}>
+                Register again
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </li>
+  );
+}
+
+function Fact({ icon: Icon, label, value }: { icon: typeof Route; label: string; value: string }) {
+  return (
+    <div className="bg-card px-3 py-2.5 sm:px-4">
+      <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Icon className="size-3.5 shrink-0" aria-hidden />
+        {label}
+      </dt>
+      <dd className="mt-0.5 font-display text-lg font-bold tabular-nums">{value}</dd>
+    </div>
   );
 }
 
 function StatusNote({ booking: b }: { booking: MyBooking }) {
   const latest = b.proofs[0];
   if (b.status === "pending") {
-    return <p className="text-sm">The organizer is checking your receipt. You&apos;ll get a bib number once it&apos;s approved.</p>;
+    return <p className="text-sm text-muted-foreground">The organizer is checking your receipt. You&apos;ll get a bib number once it&apos;s approved.</p>;
   }
   if (b.status === "approved") {
-    return <p className="text-sm">You&apos;re in. Bring a valid ID when you claim your race kit.</p>;
+    return <p className="text-sm text-muted-foreground">You&apos;re in. Bring a valid ID when you claim your race kit.</p>;
   }
   if (b.status === "rejected") {
     return (

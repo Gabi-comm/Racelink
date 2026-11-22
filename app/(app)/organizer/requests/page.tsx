@@ -32,7 +32,7 @@ export default function RequestsPage({ searchParams }: PageProps<"/organizer/req
 }
 
 async function Requests({ searchParams }: Pick<PageProps<"/organizer/requests">, "searchParams">) {
-  await requireUser("organizer", "admin");
+  await requireUser("organizer");
   const query = await searchParams;
   const status: RequestStatus = REQUEST_STATUSES.includes(query.status as RequestStatus) ? (query.status as RequestStatus) : "pending";
   const { list, counts } = await getRequests(status);

@@ -42,7 +42,7 @@ async function Registrations({
   params,
   searchParams,
 }: Pick<PageProps<"/organizer/events/[id]/registrations">, "params" | "searchParams">) {
-  const user = await requireUser("organizer", "admin");
+  const user = await requireUser("organizer");
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const eventId = Number(id);
   if (!Number.isInteger(eventId)) notFound();

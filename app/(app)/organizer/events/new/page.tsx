@@ -25,6 +25,6 @@ export default function NewEventPage() {
 }
 
 async function Gate() {
-  await requireUser("organizer", "admin");
+  await requireUser("organizer");
   return <EventForm />;
 }

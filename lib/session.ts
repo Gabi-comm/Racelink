@@ -3,7 +3,7 @@ import { cache } from "react";
 import { headers } from "next/headers";
 import { forbidden, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { isRole, type Role } from "@/lib/roles";
+import { homeFor, isRole, type Role } from "@/lib/roles";
 
 export type CurrentUser = { id: string; name: string; email: string; role: Role };
 
@@ -17,6 +17,10 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 export async function requireUser(...roles: Role[]): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (roles.length > 0 && !roles.includes(user.role)) forbidden();
+  if (roles.length > 0 && !roles.includes(user.role)) {
+    // admins have a single page; send them back to it instead of a 403
+    if (user.role === "admin") redirect(homeFor("admin"));
+    forbidden();
+  }
   return user;
 }

@@ -13,10 +13,9 @@ export const metadata: Metadata = { title: "Profile" };
 
 export default function ProfilePage() {
   return (
-    <div className="grid gap-6">
+    <div className="mx-auto grid w-full max-w-4xl gap-6">
       <div>
         <h1 className="font-display text-3xl font-bold tracking-tight">Profile</h1>
-        <p className="mt-1 text-muted-foreground">Your account, the details organizers see when you register, and your password.</p>
       </div>
       <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
         <Sections />
@@ -41,52 +40,64 @@ async function Sections() {
   const filled = fields.filter(([, v]) => !!v).length;
   const pct = Math.round((filled / fields.length) * 100);
 
+  const missing = fields.filter(([, v]) => !v).map(([label]) => label);
+
+  // one column: summary on top, then the forms. Nothing sticky, so nothing slides over anything.
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[18rem_1fr]">
-      <aside className="grid gap-4 rounded-lg bg-card p-5 ring-1 ring-border lg:sticky lg:top-24">
-        <div className="flex items-center gap-3">
-          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-brand-deep font-display text-lg font-bold text-white" aria-hidden>
+    <div className="grid gap-6">
+      <section className="flex flex-wrap items-center gap-x-6 gap-y-4 rounded-lg bg-card p-5 ring-1 ring-border md:p-6">
+        <div className="flex min-w-0 flex-1 items-center gap-4">
+          <span
+            className="grid size-14 shrink-0 place-items-center rounded-full bg-brand-deep font-display text-xl font-bold text-white"
+            aria-hidden
+          >
             {initials(user.name)}
           </span>
           <div className="min-w-0">
-            <p className="truncate font-semibold">{user.name}</p>
-            <p className="truncate text-sm text-muted-foreground">{user.email}</p>
+            <p className="truncate font-display text-xl font-bold">{user.name}</p>
+            <p className="truncate text-sm text-muted-foreground">
+              {user.email} · {ROLE_LABEL[user.role]}
+            </p>
           </div>
         </div>
-        <div className="grid gap-2 border-t pt-4">
+        <div className="w-full sm:w-64">
           <div className="flex items-baseline justify-between text-sm">
             <span className="font-medium">Runner details</span>
             <span className="font-semibold tabular-nums">{pct}%</span>
           </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Profile completion">
+          <div
+            className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted"
+            role="meter"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={pct}
+            aria-label="Profile completion"
+          >
             <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
           </div>
-          <ul className="mt-1 grid gap-1 text-sm">
-            {fields.map(([label, v]) => (
-              <li key={label} className="flex items-center gap-2">
-                {v ? <Check className="size-3.5 text-success" aria-hidden /> : <Circle className="size-3.5 text-muted-foreground" aria-hidden />}
-                <span className={v ? "" : "text-muted-foreground"}>{label}</span>
-                <span className="sr-only">{v ? "added" : "missing"}</span>
-              </li>
-            ))}
-          </ul>
+          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+            {missing.length === 0 ? (
+              <>
+                <Check className="size-3.5 text-success" aria-hidden /> All set for race registration
+              </>
+            ) : (
+              <>
+                <Circle className="size-3.5" aria-hidden /> Missing: {missing.join(", ")}
+              </>
+            )}
+          </p>
         </div>
-        <p className="border-t pt-4 text-xs text-muted-foreground">Account type: {ROLE_LABEL[user.role]}</p>
-      </aside>
-      <div className="grid gap-6">
-        <Section title="Account" description="Your name shows on registrations and receipts.">
-          <NameForm name={user.name} email={user.email} />
-        </Section>
-        <Section
-          title="Runner details"
-          description="Filled in for you when you register for a race. Organizers see these on your registration."
-        >
-          <DetailsForm key={profile?.updatedAt.getTime() ?? 0} profile={profile ?? null} />
-        </Section>
-        <Section title="Password" description="Changing it signs you out on your other devices.">
-          <PasswordForm />
-        </Section>
-      </div>
+      </section>
+
+      <Section title="Account" description="Your name shows on registrations and receipts.">
+        <NameForm name={user.name} email={user.email} />
+      </Section>
+      <Section title="Runner details" description="Filled in for you when you register for a race. Organizers see these on your registration.">
+        <DetailsForm key={profile?.updatedAt.getTime() ?? 0} profile={profile ?? null} />
+      </Section>
+      <Section title="Password" description="Changing it signs you out on your other devices.">
+        <PasswordForm />
+      </Section>
     </div>
   );
 }

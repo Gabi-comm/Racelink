@@ -47,7 +47,7 @@ export default function ParticipantsPage({ searchParams }: PageProps<"/organizer
 }
 
 async function Participants({ searchParams }: Pick<PageProps<"/organizer/participants">, "searchParams">) {
-  const user = await requireUser("organizer", "admin");
+  const user = await requireUser("organizer");
   const [{ races, list }, query] = await Promise.all([getParticipants(user), searchParams]);
 
   const eventId = Number(query.event);

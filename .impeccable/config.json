@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "createdAt": "2026-11-22T18:48:19.717Z",
+        "reason": "Claude: lib/mail.ts is an HTML email body; email clients can't load web fonts, so Arial is the standard email-safe stack, not a UI font choice"
+      }
+    ]
+  }
+}

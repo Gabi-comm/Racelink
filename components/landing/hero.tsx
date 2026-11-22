@@ -5,13 +5,13 @@ import { RunnerStage } from "./runner-stage";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative flex min-h-[calc(100svh-4rem)] items-center overflow-hidden">
       {/* red corner glow, like the light-beam inspo */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(55%_60%_at_0%_0%,color-mix(in_oklab,var(--primary)_10%,transparent),transparent)] dark:bg-[radial-gradient(55%_60%_at_0%_0%,color-mix(in_oklab,var(--primary)_28%,transparent),transparent)]"
       />
-      <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 pt-12 pb-16 md:grid-cols-[1fr_1.05fr] md:pt-16 md:pb-20">
+      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-10 md:grid-cols-[1fr_1.05fr]">
         <div className="max-w-xl">
           <p className="text-xs font-semibold tracking-[0.35em] text-primary uppercase">Metro Manila race registration</p>
           <h1 className="mt-4 font-display text-[clamp(2.6rem,6vw,4.5rem)] leading-[1.02] font-extrabold tracking-tight text-balance">

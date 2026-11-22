@@ -28,7 +28,7 @@ SET @pw = 'b46f6ce6fe05249b5bc852320caaaff3:38d90c6876b7408eae2587f4e947e4095ed5
 
 -- users
 INSERT INTO user (id, name, email, email_verified, role) VALUES
-  ('seed-admin', 'Alex Reyes', 'admin@racelink.test', TRUE, 'admin'),
+  ('seed-admin', 'Gabriel John Solomon', 'admin@racelink.test', TRUE, 'admin'),
   ('seed-organizer', 'Jane Smith', 'organizer@racelink.test', TRUE, 'organizer'),
   ('seed-runner-1', 'Enzo Cruz', 'enzo@racelink.test', TRUE, 'runner'),
   ('seed-runner-2', 'Paris Santos', 'paris@racelink.test', TRUE, 'runner'),
