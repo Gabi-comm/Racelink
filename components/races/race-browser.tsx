@@ -175,7 +175,7 @@ function RaceRow({ event, onOpen }: { event: PublicEvent; onOpen: () => void }) 
     <li className="grid grid-cols-[4.5rem_1fr] gap-x-5 gap-y-4 p-5 md:grid-cols-[5.5rem_1fr_auto] md:items-center md:gap-x-8 md:p-6">
       <div className="row-span-2 flex flex-col items-center rounded-md border py-2 text-center md:row-span-1">
         <span className="text-sm font-semibold text-primary">{month}</span>
-        <span className="font-display text-4xl leading-none font-extrabold tabular-nums">{day}</span>
+        <span className="font-display text-3xl leading-none font-extrabold tabular-nums">{day}</span>
         <span className="text-xs text-muted-foreground">{weekday}</span>
       </div>
 
@@ -216,7 +216,7 @@ function AvailabilityText({ event }: { event: PublicEvent }) {
   const avail = availability(event);
   if (!avail.open) return <p className="text-sm font-medium text-destructive">{avail.reason}</p>;
   if (avail.slotsLeft !== null && event.capacity && avail.slotsLeft <= Math.max(10, event.capacity * 0.1)) {
-    return <p className="text-sm font-medium text-amber-700">Only {avail.slotsLeft} slots left</p>;
+    return <p className="text-sm font-medium text-warning">Only {avail.slotsLeft} slots left</p>;
   }
   return <p className="text-sm text-muted-foreground">Registration open</p>;
 }

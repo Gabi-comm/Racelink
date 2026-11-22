@@ -5,7 +5,10 @@ import { redirect } from "next/navigation";
 import { APIError } from "better-auth/api";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { safeNext } from "@/lib/roles";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { user as users } from "@/lib/db/schema";
+import { homeFor, isRole, safeNext } from "@/lib/roles";
 
 export type AuthState = {
   error?: string;
@@ -47,8 +50,10 @@ export async function logIn(_prev: AuthState, form: FormData): Promise<AuthState
   const parsed = logInSchema.safeParse(raw);
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), values };
 
+  let userId: string;
   try {
-    await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
+    const res = await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
+    userId = res.user.id;
   } catch (err) {
     if (err instanceof APIError && err.status === "UNAUTHORIZED") {
       return { error: "Wrong email or password.", values };
@@ -60,7 +65,15 @@ export async function logIn(_prev: AuthState, form: FormData): Promise<AuthState
     return { error: "Couldn't log you in. Try again in a moment.", values };
   }
 
-  redirect(safeNext(form.get("next")));
+  redirect(await destination(userId, form.get("next")));
+}
+
+// requested page if any, else the role's home
+async function destination(userId: string, next: FormDataEntryValue | null) {
+  const target = safeNext(next);
+  if (target && target !== "/") return target;
+  const [row] = await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1);
+  return homeFor(isRole(row?.role) ? row.role : "runner");
 }
 
 export async function signUp(_prev: AuthState, form: FormData): Promise<AuthState> {
@@ -75,8 +88,10 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), values };
 
   const { name, email, password } = parsed.data;
+  let userId: string;
   try {
-    await auth.api.signUpEmail({ body: { name, email, password }, headers: await headers() });
+    const res = await auth.api.signUpEmail({ body: { name, email, password }, headers: await headers() });
+    userId = res.user.id;
   } catch (err) {
     if (err instanceof APIError && err.status === "UNPROCESSABLE_ENTITY") {
       return { fieldErrors: { email: "An account with this email already exists. Log in instead." }, values };
@@ -85,10 +100,11 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
     return { error: "Couldn't create your account. Try again in a moment.", values };
   }
 
-  redirect(safeNext(form.get("next")));
+  redirect(await destination(userId, form.get("next")));
 }
 
+// logout is the only way back to the public site
 export async function logOut() {
   await auth.api.signOut({ headers: await headers() });
-  redirect("/login");
+  redirect("/");
 }

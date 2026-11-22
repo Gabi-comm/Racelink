@@ -14,9 +14,10 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
-import { BOOKING_STATUSES, EVENT_STATUSES, GENDERS, PAYMENT_METHODS, PAYMENT_STATUSES, TSHIRT_SIZES } from "@/lib/constants";
+import { BOOKING_STATUSES, EVENT_STATUSES, GENDERS, PAYMENT_METHODS, PAYMENT_STATUSES, REQUEST_STATUSES, TSHIRT_SIZES } from "@/lib/constants";
+import type { AnyMySqlColumn } from "drizzle-orm/mysql-core";
 
-export { BOOKING_STATUSES, EVENT_STATUSES, GENDERS, PAYMENT_STATUSES, ROLES, TSHIRT_SIZES } from "@/lib/constants";
+export { BOOKING_STATUSES, EVENT_STATUSES, GENDERS, PAYMENT_STATUSES, REQUEST_STATUSES, ROLES, TSHIRT_SIZES } from "@/lib/constants";
 
 
 const createdAt = () => timestamp("created_at", { fsp: 3 }).defaultNow().notNull();
@@ -127,6 +128,9 @@ export const events = mysqlTable(
     paymentAccountNumber: varchar("payment_account_number", { length: 50 }),
     paymentInstructions: text("payment_instructions"),
     bannerKey: varchar("banner_key", { length: 255 }),
+    requestedBy: varchar("requested_by", { length: 150 }),
+    // plain column, FK lives on race_requests.event_id para walang circular FK
+    requestId: int("request_id"),
     status: mysqlEnum("status", EVENT_STATUSES).default("open").notNull(),
     organizerId: varchar("organizer_id", { length: 36 })
       .notNull()
@@ -234,4 +238,29 @@ export const eventDocuments = mysqlTable(
     createdAt: createdAt(),
   },
   (t) => [index("event_documents_event_idx").on(t.eventId)],
+);
+
+// race requests from organizations (public form), shared queue for organizers
+export const raceRequests = mysqlTable(
+  "race_requests",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    organization: varchar("organization", { length: 150 }).notNull(),
+    contactName: varchar("contact_name", { length: 100 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 30 }),
+    raceTitle: varchar("race_title", { length: 150 }).notNull(),
+    proposedDate: date("proposed_date", { mode: "string" }).notNull(),
+    location: varchar("location", { length: 255 }).notNull(),
+    expectedRunners: int("expected_runners"),
+    distances: varchar("distances", { length: 150 }),
+    message: text("message"),
+    status: mysqlEnum("status", REQUEST_STATUSES).default("pending").notNull(),
+    reviewNote: varchar("review_note", { length: 255 }),
+    reviewedBy: varchar("reviewed_by", { length: 36 }).references(() => user.id, { onDelete: "set null" }),
+    reviewedAt: timestamp("reviewed_at", { fsp: 3 }),
+    eventId: int("event_id").references((): AnyMySqlColumn => events.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("race_requests_status_idx").on(t.status), index("race_requests_created_idx").on(t.createdAt)],
 );

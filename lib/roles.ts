@@ -16,8 +16,13 @@ export function canManageEvents(role: Role) {
   return role === "organizer" || role === "admin";
 }
 
-// only same-site paths, blocks //evil.com
-export function safeNext(next: unknown, fallback = "/dashboard") {
+// where each role lands after login; the public site is off-limits while signed in
+export function homeFor(role: Role) {
+  return role === "runner" ? "/dashboard" : role === "organizer" ? "/organizer" : "/admin";
+}
+
+// only same-site paths, blocks //evil.com. empty fallback = "use the role home"
+export function safeNext(next: unknown, fallback = "") {
   if (typeof next !== "string" || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) {
     return fallback;
   }

@@ -39,16 +39,16 @@ export function ReceiptPicker({ error, onBusyChange }: { error?: string; onBusyC
     <div className="grid gap-3">
       <input type="hidden" name="receiptKey" value={key} />
       {key && (
-        <div className="flex items-center gap-3 rounded-lg bg-emerald-50 p-3 ring-1 ring-emerald-200">
+        <div className="flex items-center gap-3 rounded-lg bg-card p-3 shadow-[inset_3px_0_0_var(--success)] ring-1 ring-border">
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={preview} alt="Receipt preview" className="size-14 rounded-md object-cover" />
           ) : (
-            <CheckCircle2 className="size-5 text-emerald-700" aria-hidden />
+            <CheckCircle2 className="size-5 text-success" aria-hidden />
           )}
           <div className="min-w-0 text-sm">
-            <p className="font-semibold text-emerald-900">Receipt uploaded</p>
-            <p className="truncate text-emerald-800">{name}</p>
+            <p className="font-semibold">Receipt uploaded</p>
+            <p className="truncate text-muted-foreground">{name}</p>
           </div>
         </div>
       )}

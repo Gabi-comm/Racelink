@@ -2,9 +2,11 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PaymentDetails } from "@/components/payment-details";
-import { CalendarDays, CheckCircle2, MapPin } from "lucide-react";
+import { Ban, CalendarDays, CheckCircle2, MapPin } from "lucide-react";
+import { RaceProgress } from "@/components/runner/race-progress";
+import { BookingStatusMark, StatusMark } from "@/components/status-badge";
 import { buttonVariants } from "@/components/ui/button";
-import { formatDate, formatPeso, formatTime } from "@/lib/events";
+import { formatDate, formatPeso, formatTime, todayInManila } from "@/lib/events";
 import { getMyBookings, type MyBooking } from "@/lib/queries/bookings";
 import { requireUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
@@ -17,7 +19,7 @@ export default function BookingsPage({ searchParams }: PageProps<"/bookings">) {
   return (
     <div className="grid gap-6">
       <div>
-        <h1 className="font-display text-4xl font-extrabold tracking-tight">My bookings</h1>
+        <h1 className="font-display text-3xl font-bold tracking-tight">My bookings</h1>
         <p className="mt-1 text-muted-foreground">Your race registrations, payment status and bib numbers.</p>
       </div>
       <Suspense fallback={<div className="h-64 rounded-lg bg-card ring-1 ring-border" />}>
@@ -31,6 +33,10 @@ async function Bookings({ searchParams }: Pick<PageProps<"/bookings">, "searchPa
   const user = await requireUser();
   const [list, query] = await Promise.all([getMyBookings(user.id), searchParams]);
   const justRegistered = Number(query.registered);
+  const today = todayInManila();
+  const isPast = (b: MyBooking) => b.eventDate < today || b.status === "cancelled" || b.eventStatus === "cancelled";
+  const upcoming = list.filter((b) => !isPast(b));
+  const past = list.filter(isPast).sort((a, b) => b.eventDate.localeCompare(a.eventDate));
 
   if (list.length === 0) {
     return (
@@ -47,31 +53,51 @@ async function Bookings({ searchParams }: Pick<PageProps<"/bookings">, "searchPa
   return (
     <>
       {list.some((b) => b.id === justRegistered) && (
-        <p role="status" className="flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 ring-1 ring-emerald-200">
+        <p role="status" className="flex items-center gap-2 rounded-lg bg-card px-4 py-3 text-sm font-medium shadow-[inset_3px_0_0_var(--success)] ring-1 ring-border [&>svg]:text-success">
           <CheckCircle2 className="size-4" aria-hidden /> Registration sent. The organizer will check your receipt.
         </p>
       )}
-      <ul className="grid gap-4">
-        {list.map((b) => (
-          <BookingCard key={b.id} booking={b} highlight={b.id === justRegistered} />
-        ))}
-      </ul>
+      <Group title="Upcoming" items={upcoming} highlight={justRegistered} />
+      {past.length > 0 && <Group title="Past and cancelled" items={past} highlight={justRegistered} />}
     </>
   );
 }
 
-const STATUS: Record<MyBooking["status"], { label: string; className: string }> = {
-  pending: { label: "Payment under review", className: "bg-amber-100 text-amber-900" },
-  approved: { label: "Confirmed", className: "bg-emerald-100 text-emerald-800" },
-  rejected: { label: "Payment rejected", className: "bg-red-100 text-red-800" },
-  cancelled: { label: "Cancelled", className: "bg-muted text-muted-foreground" },
+const STATUS_LABEL: Record<MyBooking["status"], string> = {
+  pending: "Payment under review",
+  approved: "Confirmed",
+  rejected: "Payment rejected",
+  cancelled: "Cancelled",
 };
+
+function Group({ title, items, highlight }: { title: string; items: MyBooking[]; highlight: number }) {
+  return (
+    <section className="grid gap-3">
+      <h2 className="font-display text-lg font-bold">
+        {title} <span className="text-sm font-medium text-muted-foreground tabular-nums">{items.length}</span>
+      </h2>
+      {items.length === 0 ? (
+        <p className="rounded-lg bg-card px-5 py-6 text-sm text-muted-foreground ring-1 ring-border">
+          Nothing coming up.{" "}
+          <Link href="/races" className="font-semibold text-primary hover:underline">
+            Find your next race
+          </Link>
+        </p>
+      ) : (
+        <ul className="grid gap-4">
+          {items.map((b) => (
+            <BookingCard key={b.id} booking={b} highlight={b.id === highlight} />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 function BookingCard({ booking: b, highlight }: { booking: MyBooking; highlight: boolean }) {
   const latest = b.proofs[0];
   const start = formatTime(b.startTime);
   const raceCancelled = b.eventStatus === "cancelled";
-  const status = STATUS[b.status];
 
   return (
     <li
@@ -83,11 +109,15 @@ function BookingCard({ booking: b, highlight }: { booking: MyBooking; highlight:
     >
       <div className="grid gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <span className={cn("rounded-md px-2 py-0.5 text-xs font-semibold", status.className)}>{status.label}</span>
-          {raceCancelled && <span className="rounded-md bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800">Race cancelled</span>}
+          <BookingStatusMark status={b.status} label={STATUS_LABEL[b.status]} />
+          {raceCancelled && (
+            <StatusMark tone="danger" icon={Ban}>
+              Race cancelled
+            </StatusMark>
+          )}
         </div>
         <div>
-          <h2 className="font-display text-2xl leading-tight font-bold">{b.title}</h2>
+          <h3 className="font-display text-xl leading-tight font-bold">{b.title}</h3>
           <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <CalendarDays className="size-4" aria-hidden />
@@ -114,6 +144,8 @@ function BookingCard({ booking: b, highlight }: { booking: MyBooking; highlight:
             <dd className="font-display text-lg font-bold tabular-nums">{formatPeso(b.price)}</dd>
           </div>
         </dl>
+
+        {!raceCancelled && <RaceProgress status={b.status} attended={b.attended} className="max-w-xl" />}
 
         <StatusNote booking={b} />
 
@@ -150,11 +182,11 @@ function StatusNote({ booking: b }: { booking: MyBooking }) {
   }
   if (b.status === "rejected") {
     return (
-      <div className="rounded-lg bg-red-50 p-3 text-sm text-red-900 ring-1 ring-red-200">
-        <p className="font-semibold">The organizer couldn&apos;t confirm your payment.</p>
+      <div className="rounded-lg bg-destructive/[0.04] p-3 text-sm shadow-[inset_3px_0_0_var(--destructive)] ring-1 ring-destructive/15">
+        <p className="font-semibold text-destructive">The organizer couldn&apos;t confirm your payment.</p>
         {latest?.reviewNote && <p className="mt-1">Reason: {latest.reviewNote}</p>}
         <p className="mt-1">Upload a new receipt below to send it again.</p>
-        <PaymentDetails info={b} className="mt-2 text-red-950/80" />
+        <PaymentDetails info={b} className="mt-2 text-muted-foreground" />
       </div>
     );
   }

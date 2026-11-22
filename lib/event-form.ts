@@ -72,6 +72,11 @@ export const eventSchema = z
     sizes: z.array(z.enum(TSHIRT_SIZES)).min(1, "Pick at least one shirt size."),
     distances: z.array(distanceSchema).min(1, "Add at least one distance."),
     bannerKey: z.string().transform((v) => v || null),
+    requestedBy: z
+      .string()
+      .trim()
+      .max(150, "Organization name is too long.")
+      .transform((v) => v || null),
   })
   .superRefine((d, ctx) => {
     if (d.paymentMethod === "bank" && d.paymentBank.length < 2) {
@@ -115,6 +120,7 @@ export function readEventForm(form: FormData) {
     sizes: form.getAll("sizes").map(String),
     distances: labels.map((label, i) => ({ id: ids[i] ?? "", label, price: prices[i] ?? "", slots: slots[i] ?? "" })),
     bannerKey: String(form.get("bannerKey") ?? ""),
+    requestedBy: String(form.get("requestedBy") ?? ""),
   };
 }
 

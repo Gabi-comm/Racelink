@@ -17,7 +17,7 @@ export const metadata: Metadata = { title: "Edit race" };
 export default function EditEventPage({ params, searchParams }: PageProps<"/organizer/events/[id]">) {
   return (
     <div className="grid gap-6">
-      <Link href="/organizer" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link href="/organizer/events" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ChevronLeft className="size-4" aria-hidden /> Manage events
       </Link>
       <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
@@ -40,14 +40,20 @@ async function Editor({ params, searchParams }: Pick<PageProps<"/organizer/event
     event.bannerKey ? fileUrl(event.bannerKey) : null,
     Promise.all(event.documents.map(async (d) => ({ id: d.id, title: d.title, url: await fileUrl(d.fileKey, d.title) }))),
   ]);
-  const notice = query.created ? "Race created." : query.saved ? "Changes saved." : null;
+  const notice = query.fromRequest
+    ? "Request approved. This draft race was made from it. Fill in the fees, distances and payment details, then open registration."
+    : query.created
+      ? "Race created."
+      : query.saved
+        ? "Changes saved."
+        : null;
 
   return (
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="font-display text-4xl font-extrabold tracking-tight">{event.title}</h1>
+            <h1 className="font-display text-3xl font-bold tracking-tight">{event.title}</h1>
             <StatusBadge status={event.status} />
           </div>
           <p className="mt-1 text-muted-foreground">
@@ -61,16 +67,16 @@ async function Editor({ params, searchParams }: Pick<PageProps<"/organizer/event
             Registrations
           </Link>
           {(event.status === "open" || event.status === "closed") && (
-            <Link href={`/?event=${event.id}#races`} className="inline-flex items-center gap-1.5 px-2 text-sm font-medium text-primary hover:underline">
-              View on site <ExternalLink className="size-3.5" aria-hidden />
+            <Link href={`/races?event=${event.id}`} className="inline-flex items-center gap-1.5 px-2 text-sm font-medium text-primary hover:underline">
+              View as runner <ExternalLink className="size-3.5" aria-hidden />
             </Link>
           )}
-          <DeleteEventButton id={event.id} title={event.title} hasBookings={event.bookingCount > 0} redirectTo="/organizer" />
+          <DeleteEventButton id={event.id} title={event.title} hasBookings={event.bookingCount > 0} redirectTo="/organizer/events" />
         </div>
       </div>
 
       {notice && (
-        <p role="status" className="flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 ring-1 ring-emerald-200">
+        <p role="status" className="flex items-center gap-2 rounded-lg bg-card px-4 py-3 text-sm font-medium shadow-[inset_3px_0_0_var(--success)] ring-1 ring-border [&>svg]:text-success">
           <CheckCircle2 className="size-4" aria-hidden /> {notice}
         </p>
       )}
@@ -94,6 +100,7 @@ async function Editor({ params, searchParams }: Pick<PageProps<"/organizer/event
           paymentInstructions: event.paymentInstructions,
           status: event.status,
           bannerKey: event.bannerKey,
+          requestedBy: event.requestedBy,
           distances: event.distances,
           sizes: event.sizes,
         }}

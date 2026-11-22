@@ -8,7 +8,7 @@ export function MiniBib({ number, attended, className }: { number: number; atten
         {String(number).padStart(4, "0")}
       </p>
       <div className="mx-3 mt-2 mb-3 h-1 w-10 rounded-full bg-marking" aria-hidden />
-      {attended && <p className="border-t border-dashed px-3 py-1.5 text-sm font-semibold text-emerald-700">Checked in</p>}
+      {attended && <p className="border-t border-dashed px-3 py-1.5 text-sm font-semibold text-success">Checked in</p>}
     </div>
   );
 }

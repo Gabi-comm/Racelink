@@ -1,6 +1,6 @@
 import "server-only";
 import { connection } from "next/server";
-import { desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { bookings, events, paymentProofs, runnerProfiles, user } from "@/lib/db/schema";
 import type { CurrentUser } from "@/lib/session";
@@ -98,3 +98,67 @@ export async function managedBooking(actor: CurrentUser, bookingId: number) {
   if (!row || (actor.role !== "admin" && row.organizerId !== actor.id)) return null;
   return row;
 }
+
+// every registration across the races this actor manages (admin = all)
+export async function getParticipants(actor: CurrentUser) {
+  await connection();
+  const mine: SQL | undefined = actor.role === "admin" ? undefined : eq(events.organizerId, actor.id);
+
+  const [races, rows] = await Promise.all([
+    db
+      .select({ id: events.id, title: events.title, eventDate: events.eventDate, capacity: events.capacity })
+      .from(events)
+      .where(mine)
+      .orderBy(desc(events.eventDate)),
+    db
+      .select({
+        id: bookings.id,
+        eventId: events.id,
+        eventTitle: events.title,
+        eventDate: events.eventDate,
+        runnerName: user.name,
+        email: user.email,
+        phone: runnerProfiles.phone,
+        emergencyName: runnerProfiles.emergencyName,
+        emergencyPhone: runnerProfiles.emergencyPhone,
+        distanceLabel: bookings.distanceLabel,
+        price: bookings.price,
+        tshirtSize: bookings.tshirtSize,
+        status: bookings.status,
+        bibNumber: bookings.bibNumber,
+        attended: bookings.attended,
+        createdAt: bookings.createdAt,
+      })
+      .from(bookings)
+      .innerJoin(events, eq(events.id, bookings.eventId))
+      .innerJoin(user, eq(user.id, bookings.userId))
+      .leftJoin(runnerProfiles, eq(runnerProfiles.userId, bookings.userId))
+      .where(and(mine))
+      .orderBy(
+        sql`FIELD(${bookings.status}, 'pending', 'approved', 'rejected', 'cancelled')`,
+        asc(events.eventDate),
+        bookings.bibNumber,
+        bookings.createdAt,
+      ),
+  ]);
+
+  const proofs = rows.length
+    ? await db
+        .select({
+          id: paymentProofs.id,
+          bookingId: paymentProofs.bookingId,
+          amount: paymentProofs.amount,
+          referenceNo: paymentProofs.referenceNo,
+          reviewNote: paymentProofs.reviewNote,
+        })
+        .from(paymentProofs)
+        .where(inArray(paymentProofs.bookingId, rows.map((r) => r.id)))
+        .orderBy(desc(paymentProofs.id))
+    : [];
+  const latest = new Map<number, (typeof proofs)[number]>();
+  for (const p of proofs) if (!latest.has(p.bookingId)) latest.set(p.bookingId, p);
+
+  return { races, list: rows.map((r) => ({ ...r, proof: latest.get(r.id) ?? null })) };
+}
+
+export type Participant = Awaited<ReturnType<typeof getParticipants>>["list"][number];

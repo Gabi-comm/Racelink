@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { bookings, events, paymentProofs } from "@/lib/db/schema";
@@ -21,7 +21,10 @@ async function reviewer() {
 function refresh(eventId: number) {
   revalidatePath(`/organizer/events/${eventId}/registrations`);
   revalidatePath("/organizer");
+  revalidatePath("/organizer/participants");
+  revalidatePath("/organizer/events");
   revalidatePath("/bookings");
+  revalidatePath("/dashboard");
   revalidatePath("/");
 }
 
@@ -129,4 +132,34 @@ export async function setCheckIn(bookingId: number, attended: boolean): Promise<
 
   refresh(booking.eventId);
   return { ok: true, message: attended ? "Checked in." : "Check-in undone." };
+}
+
+const bibSchema = z.number().int("Bib numbers are whole numbers.").min(1, "Bib numbers start at 1.").max(99999, "Keep bib numbers to 5 digits.");
+
+export async function setBib(bookingId: number, bib: number): Promise<Result> {
+  const user = await reviewer();
+  if (!user) return { ok: false, error: "Only organizers can assign bibs." };
+  const parsed = bibSchema.safeParse(bib);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+  const booking = await managedBooking(user, bookingId);
+  if (!booking) return { ok: false, error: "That registration doesn't exist or isn't for your race." };
+  if (booking.status !== "approved") return { ok: false, error: "Approve the payment first. Only confirmed runners get a bib." };
+
+  try {
+    await db.transaction(async (tx) => {
+      await tx.select({ id: events.id }).from(events).where(eq(events.id, booking.eventId)).for("update");
+      const [taken] = await tx
+        .select({ id: bookings.id })
+        .from(bookings)
+        .where(and(eq(bookings.eventId, booking.eventId), eq(bookings.bibNumber, parsed.data), ne(bookings.id, bookingId)))
+        .limit(1);
+      if (taken) throw new Refused(`Bib ${String(parsed.data).padStart(4, "0")} is already taken in this race.`);
+      await tx.update(bookings).set({ bibNumber: parsed.data }).where(eq(bookings.id, bookingId));
+    });
+  } catch (e) {
+    if (e instanceof Refused) return { ok: false, error: e.message };
+    throw e;
+  }
+  refresh(booking.eventId);
+  return { ok: true, message: `Bib set to ${String(parsed.data).padStart(4, "0")}.` };
 }

@@ -7,11 +7,17 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-barlow);
-  --font-display: var(--font-barlow-condensed);
+  --font-sans: var(--font-jakarta);
+  --font-display: var(--font-jakarta);
   --color-marking: var(--marking);
+  --color-primary-hover: var(--primary-hover);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-light: var(--brand-light);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-marking-foreground: var(--marking-foreground);
-  --font-heading: var(--font-barlow-condensed);
+  --font-heading: var(--font-jakarta);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -52,73 +58,93 @@
 
 :root {
   --marking: #f2c200;
-  --marking-foreground: #1c2430;
-  --background: #f4f6f9;
-  --foreground: #1c2430;
+  --marking-foreground: #221a1a;
+  --background: #f7f3f2;
+  --foreground: #221a1a;
   --card: #ffffff;
-  --card-foreground: #1c2430;
+  --card-foreground: #221a1a;
   --popover: #ffffff;
-  --popover-foreground: #1c2430;
-  --primary: #2747d6;
+  --popover-foreground: #221a1a;
+  --primary: #d40000;
   --primary-foreground: #ffffff;
-  --secondary: #e7ebf1;
-  --secondary-foreground: #1c2430;
-  --muted: #e7ebf1;
-  --muted-foreground: #566173;
-  --accent: #e7ebf1;
-  --accent-foreground: #1c2430;
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: #d9dfe7;
-  --input: #cfd6e0;
-  --ring: #2747d6;
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --primary-hover: #a10000;
+  --brand-deep: #3b0000;
+  --brand-dark: #6e0000;
+  --brand-light: #ff3b3b;
+  --secondary: #f1e8e6;
+  --secondary-foreground: #221a1a;
+  --muted: #f1e8e6;
+  --muted-foreground: #6b5b58;
+  --accent: #f1e8e6;
+  --accent-foreground: #221a1a;
+  --destructive: #6e0000;
+  --success: #17703a;
+  --warning: #8a5a00;
+  --border: #e6d9d6;
+  --input: #dccbc7;
+  --ring: #d40000;
+  --chart-1: #d40000;
+  --chart-2: #6e0000;
+  --chart-3: #ff6e6e;
+  --chart-4: #a10000;
+  --chart-5: #ff3b3b;
   --radius: 0.5rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #221a1a;
+  --sidebar-primary: #d40000;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1e8e6;
+  --sidebar-accent-foreground: #221a1a;
+  --sidebar-border: #e6d9d6;
+  --sidebar-ring: #d40000;
 }
 
+/* dark: near-black with a red cast, like the light-beam inspo. fills stay #e00000 so white button text passes */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --marking: #f2c200;
+  --marking-foreground: #221a1a;
+  --background: #0b0707;
+  --foreground: #f5edeb;
+  --card: #150d0d;
+  --card-foreground: #f5edeb;
+  --popover: #1a1010;
+  --popover-foreground: #f5edeb;
+  --primary: #e00000;
+  --primary-foreground: #ffffff;
+  --primary-hover: #ff1f1f;
+  --brand-deep: #1c0000;
+  --brand-dark: #6e0000;
+  --brand-light: #ff3b3b;
+  --secondary: #241615;
+  --secondary-foreground: #f5edeb;
+  --muted: #241615;
+  --muted-foreground: #b3a29f;
+  --accent: #2b1a19;
+  --accent-foreground: #f5edeb;
+  --destructive: #ff6e6e;
+  --success: #4cc47a;
+  --warning: #f0b429;
+  --border: #2f201e;
+  --input: #3d2a28;
+  --ring: #ff3b3b;
+  --chart-1: #ff3b3b;
+  --chart-2: #a10000;
+  --chart-3: #ff9a9a;
+  --chart-4: #d40000;
+  --chart-5: #ff6e6e;
+  --sidebar: #150d0d;
+  --sidebar-foreground: #f5edeb;
+  --sidebar-primary: #e00000;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #241615;
+  --sidebar-accent-foreground: #f5edeb;
+  --sidebar-border: #2f201e;
+  --sidebar-ring: #ff3b3b;
+}
+
+/* red text on near-black needs the lighter step to stay readable */
+.dark .text-primary {
+  color: var(--brand-light);
 }
 
 @layer base {
@@ -132,14 +158,6 @@
     @apply font-sans;
   }
 }
-@keyframes bib-in {
-  from {
-    opacity: 0;
-    translate: 0 16px;
-    rotate: -6deg;
-  }
-}
-
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 5rem;
@@ -148,5 +166,165 @@ html {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+}
+
+/* ---------- how it works demo: each scene remounts, so these replay per step ----------
+   base styles are the END state; keyframes animate from the start state, so reduced motion just shows the result */
+.demo-in {
+  animation: demo-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) var(--at, 0s) backwards;
+}
+.demo-pop {
+  animation: demo-pop 0.4s cubic-bezier(0.3, 1.5, 0.5, 1) var(--at, 0s) backwards;
+}
+.demo-out {
+  opacity: 0;
+  animation: demo-out 0.25s ease-in var(--at, 0s) backwards;
+}
+.demo-fill {
+  transform-origin: left;
+  animation: demo-fill var(--len, 1.2s) cubic-bezier(0.4, 0, 0.2, 1) var(--at, 0s) backwards;
+}
+/* cursor: x0,y0 -> x1,y1 (click) -> x2,y2 (click). base = last point */
+.demo-cursor {
+  left: var(--x2);
+  top: var(--y2);
+  animation: demo-path var(--len, 2.4s) cubic-bezier(0.45, 0, 0.25, 1) var(--at, 0s) backwards;
+}
+.demo-drop {
+  animation: demo-drop 0.7s cubic-bezier(0.3, 0, 0.2, 1) var(--at, 0s) backwards;
+}
+.demo-ripple {
+  opacity: 0;
+  animation: demo-ripple 0.6s ease-out var(--at, 0s);
+}
+.demo-progress {
+  animation: demo-fill var(--len, 3.6s) linear forwards;
+  transform-origin: left;
+}
+/* typing: reveals the text left to right, one character per step */
+.demo-type {
+  display: inline-block;
+  white-space: nowrap;
+  animation: demo-type var(--len, 0.8s) steps(var(--n, 12)) var(--at, 0s) backwards;
+}
+/* counting number: animates a registered integer from 0 to --to */
+@property --num {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+.demo-count {
+  --num: var(--to);
+  counter-reset: num var(--num);
+  animation: demo-count var(--len, 2s) cubic-bezier(0.2, 0.7, 0.3, 1) var(--at, 0s) backwards;
+}
+.demo-count::after {
+  content: counter(num);
+}
+@keyframes demo-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+@keyframes demo-count {
+  from {
+    --num: 0;
+  }
+}
+@keyframes demo-in {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+@keyframes demo-pop {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+@keyframes demo-out {
+  from {
+    opacity: 1;
+  }
+}
+@keyframes demo-fill {
+  from {
+    scale: 0 1;
+  }
+}
+@keyframes demo-path {
+  0% {
+    left: var(--x0);
+    top: var(--y0);
+  }
+  30%,
+  50% {
+    left: var(--x1);
+    top: var(--y1);
+  }
+  80%,
+  100% {
+    left: var(--x2);
+    top: var(--y2);
+  }
+}
+@keyframes demo-drop {
+  from {
+    opacity: 0;
+    translate: 40px -70px;
+    rotate: -12deg;
+  }
+}
+@keyframes demo-ripple {
+  from {
+    opacity: 0.5;
+    scale: 0.3;
+  }
+  to {
+    opacity: 0;
+    scale: 1.6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-cursor,
+  .demo-ripple {
+    display: none;
+  }
+  [class*="demo-"] {
+    animation: none !important;
+  }
+}
+
+/* ---------- view transitions ---------- */
+/* page/tab switches: quick cross-fade of the page body (header stays put) */
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 220ms;
+  animation-timing-function: ease-out;
+}
+/* theme switch: new theme grows out of the toggle in a circle */
+:root[data-theme-switch]::view-transition-old(root) {
+  animation: none;
+}
+:root[data-theme-switch]::view-transition-new(root) {
+  animation: theme-reveal 520ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0 at var(--theme-x, 50%) var(--theme-y, 0));
+  }
+  to {
+    clip-path: circle(150vmax at var(--theme-x, 50%) var(--theme-y, 0));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
   }
 }

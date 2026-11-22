@@ -33,7 +33,9 @@ async function managedEvent(user: CurrentUser, id: number) {
 
 function refresh(id?: number) {
   revalidatePath("/");
+  revalidatePath("/races");
   revalidatePath("/organizer");
+  revalidatePath("/organizer/events");
   if (id) revalidatePath(`/organizer/events/${id}`);
 }
 
@@ -72,6 +74,7 @@ export async function saveEvent(_prev: EventFormState, form: FormData): Promise<
     paymentInstructions: data.paymentInstructions,
     status: data.status,
     bannerKey: data.bannerKey,
+    requestedBy: data.requestedBy,
   };
 
   let eventId: number;

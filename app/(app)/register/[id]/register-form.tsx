@@ -34,7 +34,7 @@ export function RegisterForm({ ctx, runnerName }: { ctx: RegisterContext; runner
     <form onSubmit={onSubmit} noValidate className="grid items-start gap-6 lg:grid-cols-[1fr_20rem]">
       <div className="grid gap-6">
         <div>
-          <h1 className="font-display text-4xl font-extrabold tracking-tight">Register for {event.title}</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Register for {event.title}</h1>
           <p className="mt-1 text-muted-foreground">Registering as {runnerName}.</p>
         </div>
 

@@ -6,12 +6,13 @@ import { ChevronLeft, Download, Search } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { StatusBadge } from "@/components/status-badge";
+import { FilterTabs } from "@/components/filter-tabs";
+import { BookingStatusMark, StatusBadge } from "@/components/status-badge";
 import { formatDate, formatPeso } from "@/lib/events";
 import { getRegistrations, type Registration } from "@/lib/queries/registrations";
 import { requireUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
-import { CheckInButton, ReviewButtons } from "./review-actions";
+import { BibEditor, CheckInButton, ReviewButtons } from "@/components/organizer/review-actions";
 
 export const metadata: Metadata = { title: "Registrations" };
 
@@ -24,17 +25,10 @@ const FILTERS = [
 ] as const;
 type Filter = (typeof FILTERS)[number]["value"];
 
-const STATUS: Record<Registration["status"], { label: string; className: string }> = {
-  pending: { label: "To review", className: "bg-amber-100 text-amber-900" },
-  approved: { label: "Confirmed", className: "bg-emerald-100 text-emerald-800" },
-  rejected: { label: "Rejected", className: "bg-red-100 text-red-800" },
-  cancelled: { label: "Cancelled", className: "bg-muted text-muted-foreground" },
-};
-
 export default function RegistrationsPage({ params, searchParams }: PageProps<"/organizer/events/[id]/registrations">) {
   return (
     <div className="grid gap-6">
-      <Link href="/organizer" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link href="/organizer/events" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ChevronLeft className="size-4" aria-hidden /> Manage events
       </Link>
       <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
@@ -81,7 +75,7 @@ async function Registrations({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="font-display text-4xl font-extrabold tracking-tight">{event.title}</h1>
+            <h1 className="font-display text-3xl font-bold tracking-tight">{event.title}</h1>
             <StatusBadge status={event.status} />
           </div>
           <p className="mt-1 text-muted-foreground">
@@ -104,21 +98,10 @@ async function Registrations({
       </dl>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <nav aria-label="Filter registrations" className="flex flex-wrap gap-1">
-          {FILTERS.map((f) => (
-            <Link
-              key={f.value}
-              href={href(f.value)}
-              aria-current={filter === f.value ? "page" : undefined}
-              className={cn(
-                "rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                filter === f.value && "bg-foreground text-background hover:bg-foreground hover:text-background",
-              )}
-            >
-              {f.label} <span className="tabular-nums opacity-70">{countFor(f.value)}</span>
-            </Link>
-          ))}
-        </nav>
+        <FilterTabs
+          label="Filter registrations"
+          items={FILTERS.map((f) => ({ href: href(f.value), label: f.label, count: countFor(f.value), active: filter === f.value }))}
+        />
         <form className="relative w-full sm:w-64" role="search">
           {filter !== "all" && <input type="hidden" name="status" value={filter} />}
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
@@ -163,7 +146,6 @@ async function Registrations({
 }
 
 function Row({ r }: { r: Registration }) {
-  const status = STATUS[r.status];
   return (
     <TableRow className="align-top">
       <TableCell className="pl-4">
@@ -197,14 +179,14 @@ function Row({ r }: { r: Registration }) {
         )}
       </TableCell>
       <TableCell>
-        <span className={cn("rounded-md px-2 py-0.5 text-xs font-semibold whitespace-nowrap", status.className)}>{status.label}</span>
+        <BookingStatusMark status={r.status} />
         {r.status === "rejected" && r.proof?.reviewNote && (
           <p className="mt-1 max-w-48 text-xs text-muted-foreground">{r.proof.reviewNote}</p>
         )}
-        {r.attended && <p className="mt-1 text-xs font-semibold text-emerald-700">Checked in</p>}
+        {r.attended && <p className="mt-1 text-xs font-semibold text-success">Checked in</p>}
       </TableCell>
-      <TableCell className="text-right font-display text-xl font-extrabold tabular-nums">
-        {r.bibNumber !== null ? String(r.bibNumber).padStart(4, "0") : <span className="text-muted-foreground">—</span>}
+      <TableCell className="text-right">
+        {r.status === "approved" ? <BibEditor bookingId={r.id} bib={r.bibNumber} /> : <span className="text-muted-foreground">—</span>}
       </TableCell>
       <TableCell className="pr-4">
         {r.status === "pending" && <ReviewButtons bookingId={r.id} runnerName={r.runnerName} />}
@@ -220,7 +202,7 @@ function Row({ r }: { r: Registration }) {
 
 function Stat({ label, value, suffix, tone }: { label: string; value: number; suffix?: string; tone?: "amber" }) {
   return (
-    <div className={cn("rounded-lg bg-card p-4 ring-1 ring-border", tone === "amber" && "bg-amber-50 ring-amber-200")}>
+    <div className={cn("rounded-lg bg-card p-4 ring-1 ring-border", tone === "amber" && "shadow-[inset_3px_0_0_var(--primary)]")}>
       <dt className="text-sm text-muted-foreground">{label}</dt>
       <dd className="font-display text-3xl font-extrabold tabular-nums">
         {value}

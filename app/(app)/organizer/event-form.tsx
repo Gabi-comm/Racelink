@@ -38,6 +38,7 @@ export type EventFormValues = {
   paymentInstructions: string | null;
   status: EventStatus;
   bannerKey: string | null;
+  requestedBy: string | null;
   distances: { id: number; label: string; price: number; slots: number | null }[];
   sizes: TshirtSize[];
 };
@@ -67,9 +68,9 @@ const SELECT =
 
 const STATUS_HINT: Record<EventStatus, string> = {
   draft: "Only you can see it.",
-  open: "Listed on the home page and taking registrations.",
+  open: "Listed for runners and taking registrations.",
   closed: "Listed, but not taking new registrations.",
-  cancelled: "Hidden from the home page. Runners see it as cancelled.",
+  cancelled: "Hidden from the race list. Runners see it as cancelled.",
 };
 
 let nextKey = 1;
@@ -102,6 +103,13 @@ export function EventForm({ event, bannerUrl }: { event?: EventFormValues; banne
       <Section title="Race details">
         <Field label="Race name" error={err.title}>
           <Input name="title" defaultValue={event?.title} maxLength={150} required aria-invalid={!!err.title || undefined} />
+        </Field>
+        <Field
+          label="Requested by"
+          hint="Optional. The organization that asked for this race, like a school, barangay or company."
+          error={err.requestedBy}
+        >
+          <Input name="requestedBy" defaultValue={event?.requestedBy ?? ""} maxLength={150} aria-invalid={!!err.requestedBy || undefined} />
         </Field>
         <Field label="Where" hint="City or venue runners will recognize, like Roxas Blvd, Manila." error={err.location}>
           <Input name="location" defaultValue={event?.location} maxLength={255} required aria-invalid={!!err.location || undefined} />

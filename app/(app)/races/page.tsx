@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { RaceListSkeleton, Races } from "@/components/landing/races-section";
+import { RaceListSkeleton, Races } from "@/components/races/race-list";
 import { getPublicEvents } from "@/lib/queries/events";
 import { requireUser } from "@/lib/session";
 
@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Races" };
 export default function RacesPage({ searchParams }: PageProps<"/races">) {
   return (
     <div className="grid gap-2">
-      <h1 className="font-display text-4xl font-extrabold tracking-tight">Upcoming races</h1>
+      <h1 className="font-display text-3xl font-bold tracking-tight">Find a race</h1>
       <p className="max-w-2xl text-muted-foreground">
         Filter by month or distance, then open a race to see fees, shirt sizes and race-day details.
       </p>

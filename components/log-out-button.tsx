@@ -10,7 +10,7 @@ export function LogOutButton() {
   return (
     <Button variant="ghost" size="sm" disabled={pending} onClick={() => startTransition(() => logOut())}>
       <LogOut aria-hidden />
-      {pending ? "Logging out…" : "Log Out"}
+      {pending ? "Logging out…" : "Log out"}
     </Button>
   );
 }

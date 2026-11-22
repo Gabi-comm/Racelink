@@ -1,60 +1,63 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { Footprints } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Logo } from "@/components/brand/logo";
 import { LogOutButton } from "@/components/log-out-button";
-import { ROLE_LABEL, type Role } from "@/lib/roles";
+import { getPendingRequestCount } from "@/lib/queries/requests";
+import { ROLE_LABEL, homeFor, type Role } from "@/lib/roles";
 import { getCurrentUser } from "@/lib/session";
+import { AppNav, type AppNavItem } from "./app-nav";
 
-const NAV: { href: string; label: string; roles: Role[] }[] = [
-  { href: "/dashboard", label: "Dashboard", roles: ["runner", "organizer", "admin"] },
-  { href: "/races", label: "Races", roles: ["runner"] },
-  { href: "/bookings", label: "My Bookings", roles: ["runner"] },
-  { href: "/organizer", label: "Manage Events", roles: ["organizer", "admin"] },
-  { href: "/admin", label: "Users", roles: ["admin"] },
+const ORGANIZER: AppNavItem[] = [
+  { href: "/organizer", label: "Dashboard", exact: true },
+  { href: "/organizer/participants", label: "Manage Participants" },
+  { href: "/organizer/events", label: "Manage Events" },
+  { href: "/organizer/requests", label: "Request Forms", badgeKey: "requests" },
 ];
+
+const NAV: Record<Role, AppNavItem[]> = {
+  runner: [
+    { href: "/dashboard", label: "Home" },
+    { href: "/races", label: "Races" },
+    { href: "/bookings", label: "My Bookings" },
+    { href: "/profile", label: "Profile" },
+  ],
+  organizer: ORGANIZER,
+  admin: [...ORGANIZER, { href: "/admin", label: "Users" }],
+};
 
 export function AppHeader() {
   return (
-    <header className="border-b bg-background">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <Footprints className="size-5" aria-hidden />
-          RaceLink
-        </Link>
-        <Suspense fallback={<div className="flex-1" />}>
-          <UserNav />
-        </Suspense>
-      </div>
+    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <Suspense fallback={<HeaderShell />}>
+        <UserNav />
+      </Suspense>
     </header>
+  );
+}
+
+function HeaderShell({ home = "/" }: { home?: string }) {
+  return (
+    <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
+      <Link href={home} aria-label="RaceLink home" className="shrink-0">
+        <Logo className="h-10" />
+      </Link>
+    </div>
   );
 }
 
 async function UserNav() {
   const user = await getCurrentUser();
-  if (!user) return <div className="flex-1" />;
+  if (!user) return <HeaderShell />;
+  const pending = user.role === "runner" ? 0 : await getPendingRequestCount();
 
   return (
-    <>
-      <nav aria-label="Main" className="flex flex-1 items-center gap-1 text-sm">
-        {NAV.filter((item) => item.roles.includes(user.role)).map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="rounded-md px-2.5 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-      <div className="flex items-center gap-3">
-        <Link href="/profile" className="text-sm font-medium hover:underline">
-          <span className="hidden sm:inline">{user.name}</span>
-          <span className="sm:hidden">Profile</span>
-        </Link>
-        <Badge variant="secondary">{ROLE_LABEL[user.role]}</Badge>
-        <LogOutButton />
-      </div>
-    </>
+    <AppNav
+      home={homeFor(user.role)}
+      items={NAV[user.role]}
+      badges={{ requests: pending }}
+      user={{ name: user.name, role: ROLE_LABEL[user.role] }}
+      logo={<Logo className="h-10" priority />}
+      logout={<LogOutButton />}
+    />
   );
 }

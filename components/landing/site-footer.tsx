@@ -1,21 +1,24 @@
-import Image from "next/image";
 import Link from "next/link";
+import { Logo } from "@/components/brand/logo";
 
 export function SiteFooter() {
   return (
-    <footer className="bg-foreground text-background">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
-          <Image src="/brand/racelink-logo.png" alt="RaceLink" width={144} height={144} className="-my-10 -ml-4 size-36" />
-          <p className="max-w-xs text-sm text-background/70">
-            Race registration for runners and organizers. A University of the East, College of Computer Studies project.
-          </p>
-        </div>
-        <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-          <a href="#races" className="text-background/80 hover:text-background">Races</a>
-          <a href="#how" className="text-background/80 hover:text-background">How it works</a>
-          <a href="#about" className="text-background/80 hover:text-background">About us</a>
-          <Link href="/login" scroll={false} className="text-background/80 hover:text-background">Log in</Link>
+    <footer className="border-t border-white/10 bg-brand-deep text-white">
+      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-5 md:flex-row md:items-center md:justify-between">
+        <Logo tone="dark" className="h-8 self-start md:self-auto" />
+        <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-1.5 text-[13px]">
+          <Link href="/" className="text-white/80 hover:text-white">
+            Home
+          </Link>
+          <Link href="/request" className="text-white/80 hover:text-white">
+            Request a race
+          </Link>
+          <Link href="/about" className="text-white/80 hover:text-white">
+            About us
+          </Link>
+          <Link href="/login" scroll={false} className="text-white/80 hover:text-white">
+            Log in
+          </Link>
         </nav>
       </div>
     </footer>
