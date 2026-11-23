@@ -38,7 +38,7 @@ export default function ParticipantsPage({ searchParams }: PageProps<"/organizer
     <div className="grid gap-6">
       <PageHeader
         title="Manage participants"
-        description="Review payments, confirm runners, assign bibs and check runners in, across all your races."
+        description="Review payments, confirm runners, assign bibs and check runners in, across all races."
       />
       <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
         <Participants searchParams={searchParams} />

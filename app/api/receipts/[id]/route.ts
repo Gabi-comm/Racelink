@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { bookings, events, paymentProofs } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/session";
 import { fileUrl } from "@/lib/storage";
+import { canManageEvents } from "@/lib/roles";
 
 // receipt: the runner, the race organizer, or an admin lang
 export async function GET(request: NextRequest, ctx: RouteContext<"/api/receipts/[id]">) {
@@ -21,7 +22,8 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/api/receipts
     .where(eq(paymentProofs.id, id))
     .limit(1);
 
-  const allowed = row && (row.runnerId === user.id || row.organizerId === user.id);
+  // the runner who uploaded it, or any organizer (organizers share every race)
+  const allowed = row && (row.runnerId === user.id || canManageEvents(user.role));
   if (!allowed) return new Response("Not found", { status: 404 });
 
   return Response.redirect(new URL(await fileUrl(row.key), request.url), 302);

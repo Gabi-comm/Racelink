@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { bookings, events, raceRequests, runnerProfiles, TSHIRT_SIZES } from "@/lib/db/schema";
 import { todayInManila } from "@/lib/events";
 import type { CurrentUser } from "@/lib/session";
+import { canManageEvents } from "@/lib/roles";
 
 const num = (q: SQL) => sql<number>`${q}`.mapWith(Number);
 
@@ -18,7 +19,8 @@ function weekStart(d: Date) {
 export async function getOrganizerAnalytics(actor: CurrentUser) {
   await connection();
   const today = todayInManila();
-  const mine = actor.role === "admin" ? undefined : eq(events.organizerId, actor.id);
+  // shared organizer team: every race counts
+  const mine = canManageEvents(actor.role) ? undefined : eq(events.organizerId, actor.id);
   const live = ne(bookings.status, "cancelled");
 
   const weeks = 12;

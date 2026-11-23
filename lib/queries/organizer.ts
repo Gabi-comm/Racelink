@@ -4,10 +4,11 @@ import { and, asc, count, desc, eq, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { bookings, eventDistances, eventDocuments, events, eventSizes, TSHIRT_SIZES, user } from "@/lib/db/schema";
 import type { CurrentUser } from "@/lib/session";
+import { canManageEvents } from "@/lib/roles";
 
-// organizer sees own events, admin sees all
+// organizers work as one team and see every race; anyone else only their own
 function scope(actor: CurrentUser): SQL | undefined {
-  return actor.role === "admin" ? undefined : eq(events.organizerId, actor.id);
+  return canManageEvents(actor.role) ? undefined : eq(events.organizerId, actor.id);
 }
 
 const bookingCount = (status: string) =>

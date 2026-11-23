@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useId, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import Link from "next/link";
-import { CheckCircle2, Info, MessageCircle, X } from "lucide-react";
+import { CheckCircle2, Info, MessageCircle, Plus, X } from "lucide-react";
 import { Typed, t } from "@/components/landing/demo-kit";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,31 +11,76 @@ import { Textarea } from "@/components/ui/textarea";
 import type { RaceRequestField, RaceRequestState } from "@/lib/request-form";
 import { submitRaceRequest } from "./actions";
 
+// contact details carry over to the next request, so another race only needs its own details
+const CARRY: RaceRequestField[] = ["organization", "contactName", "email", "phone"];
+type Prefill = Partial<Record<RaceRequestField, string>>;
+
 export function RequestForm({ minDate }: { minDate: string }) {
+  // bumping the round remounts the form with a fresh action state ("Send another request")
+  const [round, setRound] = useState(0);
+  const [prefill, setPrefill] = useState<Prefill>({});
+  return (
+    <RequestFormRound
+      key={round}
+      minDate={minDate}
+      prefill={prefill}
+      onAnother={(last) => {
+        setPrefill(last);
+        setRound((r) => r + 1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }}
+    />
+  );
+}
+
+function RequestFormRound({
+  minDate,
+  prefill,
+  onAnother,
+}: {
+  minDate: string;
+  prefill: Prefill;
+  onAnother: (last: Prefill) => void;
+}) {
   const [state, action, pending] = useActionState<RaceRequestState, FormData>(submitRaceRequest, {});
+  const last = useRef<Prefill>({});
 
   if (state.ok) {
     return (
-      <div role="status" className="grid justify-items-start gap-3 rounded-xl bg-card p-8 ring-1 ring-border">
+      <div role="status" className="demo-in grid justify-items-start gap-3 rounded-xl bg-card p-8 ring-1 ring-border">
         <CheckCircle2 className="size-8 text-success" aria-hidden />
         <h2 className="font-display text-2xl font-bold">Request sent</h2>
         <p className="max-w-prose text-muted-foreground">
           Thanks. An organizer will review your request and get in touch through the email you gave us, usually within a few
           working days. If it&apos;s approved, they&apos;ll set up the race and open registration on RaceLink.
         </p>
-        <Link href="/" className={buttonVariants({ variant: "outline", size: "lg", className: "mt-2" })}>
-          Back to home
-        </Link>
+        <div className="mt-2 flex flex-wrap gap-3">
+          <Button type="button" size="lg" className="h-11 gap-1.5 px-5" onClick={() => onAnother(last.current)}>
+            <Plus className="size-4" aria-hidden /> Send another request
+          </Button>
+          <Link href="/" className={buttonVariants({ variant: "outline", size: "lg", className: "h-11 px-5" })}>
+            Back to home
+          </Link>
+        </div>
+        <p className="text-sm text-muted-foreground">Your organization and contact details stay filled in.</p>
       </div>
     );
   }
 
-  const v = state.values ?? {};
+  const v: Prefill = state.values ?? prefill;
   const err = state.fieldErrors ?? {};
   const field = (name: RaceRequestField) => ({ name, defaultValue: v[name], error: err[name] });
 
   return (
-    <form action={action} noValidate className="grid gap-8 rounded-xl bg-card p-6 ring-1 ring-border md:p-8">
+    <form
+      action={action}
+      onSubmit={(e) => {
+        const data = new FormData(e.currentTarget);
+        last.current = Object.fromEntries(CARRY.map((k) => [k, String(data.get(k) ?? "")]));
+      }}
+      noValidate
+      className="grid gap-8 rounded-xl bg-card p-6 ring-1 ring-border md:p-8"
+    >
       {/* honeypot, hidden from people */}
       <div aria-hidden className="absolute -left-[9999px] h-0 overflow-hidden">
         <label>

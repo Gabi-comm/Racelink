@@ -27,7 +27,8 @@ async function managedEvent(user: CurrentUser, id: number) {
     .where(eq(events.id, id))
     .limit(1);
   if (!row) return null;
-  if (user.role !== "admin" && row.organizerId !== user.id) return null;
+  // any organizer can manage any race (shared team)
+  if (!canManageEvents(user.role)) return null;
   return row;
 }
 

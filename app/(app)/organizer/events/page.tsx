@@ -52,7 +52,6 @@ export default function ManageEventsPage({ searchParams }: PageProps<"/organizer
 async function Events({ searchParams }: Pick<PageProps<"/organizer/events">, "searchParams">) {
   const user = await requireUser("organizer");
   const [rows, query] = await Promise.all([getManagedEvents(user), searchParams]);
-  const isAdmin = user.role === "admin";
   const today = todayInManila();
 
   const tab: Tab = TABS.some((t) => t.value === query.tab) ? (query.tab as Tab) : "current";
@@ -128,7 +127,7 @@ async function Events({ searchParams }: Pick<PageProps<"/organizer/events">, "se
                 ) : (
                   <TableHead className="text-right">Fees confirmed</TableHead>
                 )}
-                {isAdmin && <TableHead>Organizer</TableHead>}
+                <TableHead>Created by</TableHead>
                 <TableHead className="pr-4 text-right">
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -164,7 +163,7 @@ async function Events({ searchParams }: Pick<PageProps<"/organizer/events">, "se
                   <TableCell className="text-right tabular-nums">
                     {tab === "previous" ? `${r.checkedIn} / ${r.approved}` : formatPeso(r.collected)}
                   </TableCell>
-                  {isAdmin && <TableCell className="text-muted-foreground">{r.organizerName}</TableCell>}
+                  <TableCell className="whitespace-nowrap text-muted-foreground">{r.organizerName}</TableCell>
                   <TableCell className="pr-4">
                     <div className="flex justify-end gap-1">
                       <Link href={`/organizer/participants?event=${r.id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>

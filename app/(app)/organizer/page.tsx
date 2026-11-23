@@ -17,7 +17,7 @@ export default function OrganizerDashboardPage() {
     <div className="grid gap-6">
       <PageHeader
         title="Dashboard"
-        description="How your races are filling up, what needs your review, and the fees confirmed so far."
+        description="How the races are filling up, what needs review, and the fees confirmed so far."
         actions={
           <Link href="/organizer/events/new" className={buttonVariants({ size: "lg", className: "h-10 px-4" })}>
             <Plus aria-hidden /> New race
@@ -35,7 +35,6 @@ async function Dashboard() {
   const user = await requireUser("organizer");
   const data = await getOrganizerAnalytics(user);
   const { kpis } = data;
-  const scope = user.role === "admin" ? "all races" : "your races";
 
   return (
     <>
@@ -48,7 +47,7 @@ async function Dashboard() {
           href="/organizer/participants?status=pending"
         />
         <Stat label="Confirmed runners" value={kpis.confirmed} detail={`of ${kpis.registrations} sign-ups`} href="/organizer/participants?status=approved" />
-        <Stat label="Fees confirmed" value={formatPeso(kpis.fees)} detail={`Across ${scope}`} />
+        <Stat label="Fees confirmed" value={formatPeso(kpis.fees)} detail="Across all races" />
         <Stat
           label="Race requests"
           value={kpis.pendingRequests}

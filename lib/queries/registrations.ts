@@ -4,6 +4,7 @@ import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { bookings, events, paymentProofs, runnerProfiles, user } from "@/lib/db/schema";
 import type { CurrentUser } from "@/lib/session";
+import { canManageEvents } from "@/lib/roles";
 
 export async function getRegistrations(actor: CurrentUser, eventId: number) {
   await connection();
@@ -19,7 +20,7 @@ export async function getRegistrations(actor: CurrentUser, eventId: number) {
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
-  if (!event || (actor.role !== "admin" && event.organizerId !== actor.id)) return null;
+  if (!event || (!canManageEvents(actor.role) && event.organizerId !== actor.id)) return null;
 
   const rows = await db
     .select({
@@ -95,14 +96,14 @@ export async function managedBooking(actor: CurrentUser, bookingId: number) {
     .innerJoin(events, eq(events.id, bookings.eventId))
     .where(eq(bookings.id, bookingId))
     .limit(1);
-  if (!row || (actor.role !== "admin" && row.organizerId !== actor.id)) return null;
+  if (!row || (!canManageEvents(actor.role) && row.organizerId !== actor.id)) return null;
   return row;
 }
 
-// every registration across the races this actor manages (admin = all)
+// every registration across all races (organizers share every race)
 export async function getParticipants(actor: CurrentUser) {
   await connection();
-  const mine: SQL | undefined = actor.role === "admin" ? undefined : eq(events.organizerId, actor.id);
+  const mine: SQL | undefined = canManageEvents(actor.role) ? undefined : eq(events.organizerId, actor.id);
 
   const [races, rows] = await Promise.all([
     db
