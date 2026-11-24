@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/c
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordChecklist } from "@/components/password-checklist";
+import { PASSWORD_RULES } from "@/lib/password";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSearchParams } from "next/navigation";
 import { safeNext } from "@/lib/roles";
@@ -149,9 +150,11 @@ function SignUpForm({ next }: { next: string }) {
 }
 
 // password field with the live requirement list under it
-function NewPasswordField({ error }: { error?: string }) {
+function NewPasswordField({ error: serverError }: { error?: string }) {
   const [value, setValue] = useState("");
   const id = useId();
+  // drop the server's complaint once every rule is met
+  const error = PASSWORD_RULES.every((r) => r.test(value)) ? undefined : serverError;
   return (
     <div className="grid gap-1.5">
       <Label htmlFor={id}>Password</Label>

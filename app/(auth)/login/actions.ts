@@ -94,6 +94,9 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
     if (err instanceof APIError && err.status === "UNPROCESSABLE_ENTITY") {
       return { fieldErrors: { email: "An account with this email already exists. Log in instead." }, values };
     }
+    if (err instanceof APIError && err.body?.code === "WEAK_PASSWORD") {
+      return { fieldErrors: { password: err.body.message ?? "Pick a stronger password." }, values };
+    }
     console.error(err);
     return { error: "Couldn't create your account. Try again in a moment.", values };
   }

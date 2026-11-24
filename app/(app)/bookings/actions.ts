@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { bookings, eventDistances, events, eventSizes, paymentProofs, refundRequests, runnerProfiles } from "@/lib/db/schema";
 import { fieldErrors, phone, readForm, registerSchema, resubmitSchema, type FormState } from "@/lib/booking-form";
 import { registrationBlock } from "@/lib/queries/bookings";
+import { hasAcceptedTerms } from "@/lib/queries/terms";
 import { getCurrentUser } from "@/lib/session";
 import { deleteFile } from "@/lib/storage";
 import { ownsKey } from "@/lib/uploads";
@@ -26,6 +27,7 @@ function refresh() {
 export async function register(eventId: number, _prev: FormState, form: FormData): Promise<FormState> {
   const user = await getCurrentUser();
   if (!user) return { error: "Your session ended. Log in again to register." };
+  if (!(await hasAcceptedTerms(user.id))) return { error: "Accept the Terms and Conditions first. Reload the page to see them." };
 
   const parsed = registerSchema.safeParse(readForm(form, REGISTER_KEYS));
   if (!parsed.success) {

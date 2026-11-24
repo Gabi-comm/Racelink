@@ -111,6 +111,20 @@ export const runnerProfiles = mysqlTable("runner_profiles", {
   updatedAt: updatedAt(),
 });
 
+// one row per user per terms version they accepted (audit trail; a new version asks again)
+export const termsConsents = mysqlTable(
+  "terms_consents",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: varchar("user_id", { length: 36 })
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    version: varchar("version", { length: 20 }).notNull(),
+    acceptedAt: timestamp("accepted_at", { fsp: 3 }).defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("terms_consents_user_version_uq").on(t.userId, t.version)],
+);
+
 export const events = mysqlTable(
   "events",
   {
