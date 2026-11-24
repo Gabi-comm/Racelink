@@ -1,6 +1,6 @@
 import "server-only";
 import { connection } from "next/server";
-import { and, asc, count, eq, gte, inArray, lt, ne, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, eq, gte, inArray, ne, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { bookings, events, raceRequests, runnerProfiles, TSHIRT_SIZES } from "@/lib/db/schema";
 import { todayInManila } from "@/lib/events";
@@ -35,7 +35,7 @@ export async function getOrganizerAnalytics(actor: CurrentUser) {
     return d.toISOString().slice(0, 7);
   });
 
-  const [raceRows, statusRows, weekly, monthly, distances, sizes, genders, [requests], [pastCheckIn]] = await Promise.all([
+  const [raceRows, statusRows, weekly, monthly, distances, sizes, genders, [requests]] = await Promise.all([
     db
       .select({
         id: events.id,
@@ -90,14 +90,6 @@ export async function getOrganizerAnalytics(actor: CurrentUser) {
       .where(and(mine, eq(bookings.status, "approved")))
       .groupBy(runnerProfiles.gender),
     db.select({ n: count() }).from(raceRequests).where(eq(raceRequests.status, "pending")),
-    db
-      .select({
-        approved: count(),
-        attended: num(sql`COALESCE(SUM(${bookings.attended}), 0)`),
-      })
-      .from(bookings)
-      .innerJoin(events, eq(events.id, bookings.eventId))
-      .where(and(mine, eq(bookings.status, "approved"), lt(events.eventDate, today))),
   ]);
 
   const byStatus = Object.fromEntries(statusRows.map((r) => [r.status, r])) as Partial<
@@ -119,7 +111,6 @@ export async function getOrganizerAnalytics(actor: CurrentUser) {
       rejected: byStatus.rejected?.n ?? 0,
       fees: byStatus.approved?.fees ?? 0,
       pendingFees: byStatus.pending?.fees ?? 0,
-      checkInRate: pastCheckIn && pastCheckIn.approved > 0 ? Math.round((pastCheckIn.attended / pastCheckIn.approved) * 100) : null,
       pendingRequests: requests?.n ?? 0,
     },
     weekly: Array.from({ length: weeks }, (_, i) => {

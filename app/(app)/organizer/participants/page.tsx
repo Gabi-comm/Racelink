@@ -4,7 +4,7 @@ import Form from "next/form";
 import Link from "next/link";
 import { Download, Search } from "lucide-react";
 import { FilterTabs } from "@/components/filter-tabs";
-import { BibEditor, CheckInButton, ReviewButtons } from "@/components/organizer/review-actions";
+import { BibEditor, ReviewButtons, UndoConfirmButton } from "@/components/organizer/review-actions";
 import { UrlSelect } from "@/components/organizer/url-select";
 import { EmptyState, PageHeader, Stat } from "@/components/stat";
 import { BookingStatusMark } from "@/components/status-badge";
@@ -20,7 +20,6 @@ export const metadata: Metadata = { title: "Manage Participants" };
 const STATUSES = [
   { value: "pending", label: "Payments to review" },
   { value: "approved", label: "Confirmed" },
-  { value: "nobib", label: "Needs a bib" },
   { value: "rejected", label: "Rejected" },
   { value: "cancelled", label: "Cancelled" },
   { value: "all", label: "All" },
@@ -29,7 +28,6 @@ type StatusFilter = (typeof STATUSES)[number]["value"];
 
 function matches(p: Participant, f: StatusFilter) {
   if (f === "all") return true;
-  if (f === "nobib") return p.status === "approved" && p.bibNumber === null;
   return p.status === f;
 }
 
@@ -38,7 +36,7 @@ export default function ParticipantsPage({ searchParams }: PageProps<"/organizer
     <div className="grid gap-6">
       <PageHeader
         title="Manage participants"
-        description="Review payments, confirm runners, assign bibs and check runners in, across all races."
+        description="Review payments and confirm runners across all races. Undo a confirm if you approved one by mistake."
       />
       <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
         <Participants searchParams={searchParams} />
@@ -70,8 +68,6 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
   const confirmed = inRace.filter((p) => p.status === "approved");
   const pending = inRace.filter((p) => p.status === "pending");
   const fees = confirmed.reduce((t, p) => t + p.price, 0);
-  const withBib = confirmed.filter((p) => p.bibNumber !== null).length;
-  const checkedIn = confirmed.filter((p) => p.attended).length;
 
   const href = (s: StatusFilter) => {
     const p = new URLSearchParams();
@@ -84,12 +80,10 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
 
   return (
     <>
-      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <Stat label="Payments to review" value={pending.length} attention={pending.length > 0} detail={formatPeso(pending.reduce((t, p) => t + p.price, 0)) + " waiting"} />
         <Stat label="Confirmed runners" value={confirmed.length} suffix={race?.capacity ? `/ ${race.capacity}` : undefined} />
-        <Stat label="Fees confirmed" value={formatPeso(fees)} />
-        <Stat label="Bibs assigned" value={withBib} suffix={`/ ${confirmed.length}`} detail={withBib < confirmed.length ? `${confirmed.length - withBib} still need one` : "Every confirmed runner has a bib"} />
-        <Stat label="Checked in" value={checkedIn} suffix={`/ ${confirmed.length}`} className="col-span-2 lg:col-span-1" />
+        <Stat label="Fees confirmed" value={formatPeso(fees)} className="col-span-2 lg:col-span-1" />
       </dl>
 
       <div className="grid gap-3 rounded-lg bg-card p-4 ring-1 ring-border sm:grid-cols-[minmax(0,18rem)_1fr_auto] sm:items-end">
@@ -158,7 +152,7 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
         </div>
       )}
       <p className="text-sm text-muted-foreground">
-        Bibs are assigned in order when you approve a payment. Click a bib number to change it.
+        Bibs are assigned in order when you approve a payment. Click a bib number to change it, or use Undo confirm to send a runner back to review.
       </p>
     </>
   );
@@ -203,7 +197,6 @@ function Row({ p, showRace }: { p: Participant; showRace: boolean }) {
       <TableCell>
         <BookingStatusMark status={p.status} />
         {p.status === "rejected" && p.proof?.reviewNote && <p className="mt-1 max-w-48 text-xs text-muted-foreground">{p.proof.reviewNote}</p>}
-        {p.attended && <p className="mt-1 text-xs font-semibold text-success">Checked in</p>}
       </TableCell>
       <TableCell className="text-right">
         {p.status === "approved" ? <BibEditor bookingId={p.id} bib={p.bibNumber} /> : <span className="text-muted-foreground">—</span>}
@@ -212,7 +205,7 @@ function Row({ p, showRace }: { p: Participant; showRace: boolean }) {
         {p.status === "pending" && <ReviewButtons bookingId={p.id} runnerName={p.runnerName} />}
         {p.status === "approved" && (
           <div className="flex justify-end">
-            <CheckInButton bookingId={p.id} attended={p.attended} />
+            <UndoConfirmButton bookingId={p.id} runnerName={p.runnerName} bib={p.bibNumber} />
           </div>
         )}
       </TableCell>

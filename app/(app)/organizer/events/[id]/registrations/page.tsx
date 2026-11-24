@@ -13,7 +13,7 @@ import { formatDate, formatPeso } from "@/lib/events";
 import { getRegistrations, type Registration } from "@/lib/queries/registrations";
 import { requireUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
-import { BibEditor, CheckInButton, ReviewButtons } from "@/components/organizer/review-actions";
+import { BibEditor, ReviewButtons, UndoConfirmButton } from "@/components/organizer/review-actions";
 
 export const metadata: Metadata = { title: "Registrations" };
 
@@ -94,8 +94,8 @@ async function Registrations({
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="To review" value={counts.pending} tone={counts.pending > 0 ? "amber" : undefined} />
         <Stat label="Confirmed" value={counts.approved} suffix={event.capacity ? `/ ${event.capacity}` : undefined} />
-        <Stat label="Checked in" value={counts.checkedIn} suffix={counts.approved ? `/ ${counts.approved}` : undefined} />
         <Stat label="Rejected" value={counts.rejected} />
+        <Stat label="Cancelled" value={counts.cancelled} />
       </dl>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -184,7 +184,6 @@ function Row({ r }: { r: Registration }) {
         {r.status === "rejected" && r.proof?.reviewNote && (
           <p className="mt-1 max-w-48 text-xs text-muted-foreground">{r.proof.reviewNote}</p>
         )}
-        {r.attended && <p className="mt-1 text-xs font-semibold text-success">Checked in</p>}
       </TableCell>
       <TableCell className="text-right">
         {r.status === "approved" ? <BibEditor bookingId={r.id} bib={r.bibNumber} /> : <span className="text-muted-foreground">—</span>}
@@ -193,7 +192,7 @@ function Row({ r }: { r: Registration }) {
         {r.status === "pending" && <ReviewButtons bookingId={r.id} runnerName={r.runnerName} />}
         {r.status === "approved" && (
           <div className="flex justify-end">
-            <CheckInButton bookingId={r.id} attended={r.attended} />
+            <UndoConfirmButton bookingId={r.id} runnerName={r.runnerName} bib={r.bibNumber} />
           </div>
         )}
       </TableCell>

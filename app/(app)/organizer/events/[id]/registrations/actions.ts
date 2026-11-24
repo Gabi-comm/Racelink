@@ -118,20 +118,44 @@ export async function rejectBooking(bookingId: number, note: string): Promise<Re
   }
 }
 
-export async function setCheckIn(bookingId: number, attended: boolean): Promise<Result> {
+// para sa accidental approve: balik sa To review, bitawan ang bib
+export async function undoApproval(bookingId: number): Promise<Result> {
   const user = await reviewer();
-  if (!user) return { ok: false, error: "Only organizers can check runners in." };
+  if (!user) return { ok: false, error: "Only organizers can review payments." };
   const booking = await managedBooking(user, bookingId);
   if (!booking) return { ok: false, error: "That registration doesn't exist or isn't for your race." };
 
-  const res = await db
-    .update(bookings)
-    .set({ attended, checkedInAt: attended ? new Date() : null })
-    .where(and(eq(bookings.id, bookingId), eq(bookings.status, "approved")));
-  if (res[0].affectedRows === 0) return { ok: false, error: "Only confirmed runners can be checked in." };
+  try {
+    const bib = await db.transaction(async (tx) => {
+      const [b] = await tx
+        .select({ status: bookings.status, bibNumber: bookings.bibNumber })
+        .from(bookings)
+        .where(eq(bookings.id, bookingId))
+        .for("update");
+      if (b?.status !== "approved") throw new Refused("This runner isn't confirmed anymore. Refresh to see its status.");
 
-  refresh(booking.eventId);
-  return { ok: true, message: attended ? "Checked in." : "Check-in undone." };
+      await tx
+        .update(bookings)
+        .set({ status: "pending", bibNumber: null, attended: false, checkedInAt: null })
+        .where(eq(bookings.id, bookingId));
+      const proofId = await latestProofId(tx, bookingId);
+      if (proofId) {
+        await tx
+          .update(paymentProofs)
+          .set({ status: "pending", reviewNote: null, reviewedBy: null, reviewedAt: null })
+          .where(eq(paymentProofs.id, proofId));
+      }
+      return b.bibNumber;
+    });
+    refresh(booking.eventId);
+    return {
+      ok: true,
+      message: bib !== null ? `Moved back to To review. Bib ${String(bib).padStart(4, "0")} released.` : "Moved back to To review.",
+    };
+  } catch (e) {
+    if (e instanceof Refused) return { ok: false, error: e.message };
+    throw e;
+  }
 }
 
 const bibSchema = z.number().int("Bib numbers are whole numbers.").min(1, "Bib numbers start at 1.").max(99999, "Keep bib numbers to 5 digits.");

@@ -57,11 +57,6 @@ async function Dashboard() {
         />
         <Stat label="Open for registration" value={kpis.racesOpen} detail={`${kpis.racesUpcoming} upcoming in total`} href="/organizer/events" />
         <Stat label="Finished races" value={kpis.racesFinished} href="/organizer/events?tab=previous" />
-        <Stat
-          label="Check-in rate"
-          value={kpis.checkInRate === null ? "—" : `${kpis.checkInRate}%`}
-          detail="Confirmed runners who showed up, past races"
-        />
         <Stat label="Rejected payments" value={kpis.rejected} detail="Runners can send a new receipt" href="/organizer/participants?status=rejected" />
       </dl>
 

@@ -126,7 +126,7 @@ INSERT INTO runner_profiles (user_id, phone, address, gender, birthdate, emergen
   ('seed-runner-20', '09179282794', 'Metro Manila', 'Male', '1976-04-14', 'Contact Pascual', '09183169968'),
   ('seed-runner-21', '09177675615', 'Metro Manila', 'Female', '1987-08-11', 'Contact Salazar', '09183791163');
 
--- a finished race, for previous events and check-in stats
+-- a finished race, for the previous events tab
 INSERT INTO events (title, description, location, event_date, start_time, registration_closes, capacity, status, organizer_id, requested_by, payment_method, payment_account_name, payment_account_number) VALUES
   ('Marikina River Run', 'An early morning loop along the Marikina River Park, flat and shaded.', 'Marikina City', '2026-10-11', '05:00:00', '2026-10-04', 300, 'closed', 'seed-organizer', 'Marikina Runners Club', 'gcash', 'Jane Smith', '0917 123 4567');
 

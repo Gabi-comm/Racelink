@@ -119,7 +119,7 @@ async function RunnerView({ user }: { user: CurrentUser }) {
                 </Link>
               </div>
               {next.status === "approved" && next.bibNumber !== null ? (
-                <MiniBib number={next.bibNumber} attended={next.attended} className="md:justify-self-end" />
+                <MiniBib number={next.bibNumber} className="md:justify-self-end" />
               ) : (
                 <div className="grid h-36 w-44 -rotate-2 place-items-center self-start rounded-md border-2 border-dashed border-border p-4 text-center text-sm font-medium text-muted-foreground md:justify-self-end">
                   Bib shows here once your payment is approved
@@ -127,7 +127,7 @@ async function RunnerView({ user }: { user: CurrentUser }) {
               )}
             </div>
             <div className="border-t bg-muted/40 px-6 py-4 md:px-8">
-              <RaceProgress status={next.status} attended={next.attended} />
+              <RaceProgress status={next.status} />
             </div>
           </div>
         ) : (

@@ -83,7 +83,6 @@ export async function getMyBookings(userId: string) {
       price: bookings.price,
       tshirtSize: bookings.tshirtSize,
       bibNumber: bookings.bibNumber,
-      attended: bookings.attended,
       createdAt: bookings.createdAt,
       eventId: events.id,
       title: events.title,

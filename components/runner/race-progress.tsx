@@ -3,18 +3,18 @@ import { cn } from "@/lib/utils";
 
 type Status = "pending" | "approved" | "rejected" | "cancelled";
 
-const STEPS = ["Registered", "Payment review", "Confirmed", "Checked in"] as const;
+const STEPS = ["Registered", "Payment review", "Confirmed"] as const;
 
 // where a booking is on its way to race day
-export function RaceProgress({ status, attended, className }: { status: Status; attended: boolean; className?: string }) {
+export function RaceProgress({ status, className }: { status: Status; className?: string }) {
   if (status === "cancelled") return null;
   // index of the step currently in progress / last reached
-  const reached = status === "pending" ? 1 : status === "rejected" ? 1 : attended ? 3 : 2;
+  const reached = status === "pending" ? 1 : status === "rejected" ? 1 : 2;
 
   return (
-    <ol className={cn("grid grid-cols-4 gap-1", className)} aria-label="Registration progress">
+    <ol className={cn("grid grid-cols-3 gap-1", className)} aria-label="Registration progress">
       {STEPS.map((label, i) => {
-        const done = i < reached || (i === reached && (status === "approved" || attended));
+        const done = i < reached || (i === reached && status === "approved");
         const failed = status === "rejected" && i === 1;
         const current = i === reached && !done && !failed;
         return (

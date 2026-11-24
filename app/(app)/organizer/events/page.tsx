@@ -122,11 +122,7 @@ async function Events({ searchParams }: Pick<PageProps<"/organizer/events">, "se
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Confirmed</TableHead>
                 <TableHead className="text-right">To review</TableHead>
-                {tab === "previous" ? (
-                  <TableHead className="text-right">Checked in</TableHead>
-                ) : (
-                  <TableHead className="text-right">Fees confirmed</TableHead>
-                )}
+                <TableHead className="text-right">Fees confirmed</TableHead>
                 <TableHead>Created by</TableHead>
                 <TableHead className="pr-4 text-right">
                   <span className="sr-only">Actions</span>
@@ -161,7 +157,7 @@ async function Events({ searchParams }: Pick<PageProps<"/organizer/events">, "se
                     )}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {tab === "previous" ? `${r.checkedIn} / ${r.approved}` : formatPeso(r.collected)}
+                    {formatPeso(r.collected)}
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-muted-foreground">{r.organizerName}</TableCell>
                   <TableCell className="pr-4">

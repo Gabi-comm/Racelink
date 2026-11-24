@@ -190,5 +190,5 @@ const STEPS: DemoStep[] = [
     view: "Organizer · Manage Participants",
     scene: ApproveScene,
   },
-  { title: "Claim your bib", body: "Your bib shows up in My Bookings. Bring it on race day to check in.", view: "My Bookings", scene: BibScene },
+  { title: "Claim your bib", body: "Your bib shows up in My Bookings once you're confirmed.", view: "My Bookings", scene: BibScene },
 ];

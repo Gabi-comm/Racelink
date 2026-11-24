@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState, useTransition } from "react";
-import { Check, Pencil, UserCheck, X } from "lucide-react";
+import { Check, Pencil, Undo2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { approveBooking, rejectBooking, setBib, setCheckIn } from "@/app/(app)/organizer/events/[id]/registrations/actions";
+import { approveBooking, rejectBooking, setBib, undoApproval } from "@/app/(app)/organizer/events/[id]/registrations/actions";
 
 type Result = { ok: true; message: string } | { ok: false; error: string };
 
@@ -96,16 +96,31 @@ export function ReviewButtons({ bookingId, runnerName }: { bookingId: number; ru
   );
 }
 
-export function CheckInButton({ bookingId, attended }: { bookingId: number; attended: boolean }) {
+// undo an accidental approve; runner goes back to To review
+export function UndoConfirmButton({ bookingId, runnerName, bib }: { bookingId: number; runnerName: string; bib: number | null }) {
   const [pending, run] = useRun();
-  return attended ? (
-    <Button size="sm" variant="ghost" disabled={pending} onClick={() => run(() => setCheckIn(bookingId, false))}>
-      Undo check-in
-    </Button>
-  ) : (
-    <Button size="sm" variant="secondary" disabled={pending} onClick={() => run(() => setCheckIn(bookingId, true))}>
-      <UserCheck aria-hidden /> Check in
-    </Button>
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <Button size="sm" variant="outline" disabled={pending} onClick={() => setOpen(true)}>
+        <Undo2 aria-hidden /> Undo confirm
+      </Button>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Move {runnerName} back to To review?</DialogTitle>
+          <DialogDescription>
+            {bib !== null ? `Bib ${String(bib).padStart(4, "0")} is released and ` : ""}
+            {bib !== null ? "the" : "The"} receipt goes back to review, so you can approve or reject it again.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>Keep confirmed</DialogClose>
+          <Button variant="destructive" disabled={pending} onClick={() => run(() => undoApproval(bookingId), () => setOpen(false))}>
+            {pending ? "Undoing…" : "Undo confirm"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

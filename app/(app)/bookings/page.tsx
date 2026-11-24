@@ -159,7 +159,7 @@ function BookingCard({ booking: b, highlight }: { booking: MyBooking; highlight:
             <Fact icon={Wallet} label="Fee" value={formatPeso(b.price)} />
           </dl>
 
-          {!raceCancelled && <RaceProgress status={b.status} attended={b.attended} />}
+          {!raceCancelled && <RaceProgress status={b.status} />}
 
           <StatusNote booking={b} />
 
@@ -168,7 +168,7 @@ function BookingCard({ booking: b, highlight }: { booking: MyBooking; highlight:
 
         {/* bib: the real one once confirmed, an empty slot while the payment is checked */}
         {hasBib ? (
-          <MiniBib number={b.bibNumber!} attended={b.attended} className="md:mt-1 md:justify-self-end" />
+          <MiniBib number={b.bibNumber!} className="md:mt-1 md:justify-self-end" />
         ) : b.status === "pending" && !raceCancelled ? (
           <div className="hidden w-44 self-start rounded-md border-2 border-dashed p-4 text-center md:mt-1 md:block md:justify-self-end">
             <Hourglass className="mx-auto size-5 text-muted-foreground" aria-hidden />

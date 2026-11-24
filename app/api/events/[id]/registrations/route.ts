@@ -22,12 +22,12 @@ export async function GET(_request: Request, ctx: RouteContext<"/api/events/[id]
 
   const header = [
     "Bib", "Runner", "Email", "Phone", "Gender", "Birthdate", "Emergency contact", "Emergency phone",
-    "Distance", "Fee", "Shirt", "Status", "Amount paid", "Reference no", "Checked in", "Registered at",
+    "Distance", "Fee", "Shirt", "Status", "Amount paid", "Reference no", "Registered at",
   ];
   const rows = data.list.map((r) => [
     r.bibNumber, r.runnerName, r.email, r.phone, r.gender, r.birthdate, r.emergencyName, r.emergencyPhone,
     r.distanceLabel, r.price.toFixed(2), r.tshirtSize, r.status, r.proof?.amount.toFixed(2), r.proof?.referenceNo,
-    r.checkedInAt?.toISOString() ?? "", r.createdAt.toISOString(),
+    r.createdAt.toISOString(),
   ]);
   const csv = [header, ...rows].map((row) => row.map(cell).join(",")).join("\r\n");
   const slug = data.event.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "race";

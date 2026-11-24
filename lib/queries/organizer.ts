@@ -29,7 +29,6 @@ export async function getManagedEvents(actor: CurrentUser) {
       approved: bookingCount("approved"),
       pending: bookingCount("pending"),
       totalBookings: sql<number>`(SELECT COUNT(*) FROM bookings AS b WHERE b.event_id = ${events}.id)`.mapWith(Number),
-      checkedIn: sql<number>`(SELECT COUNT(*) FROM bookings AS b WHERE b.event_id = ${events}.id AND b.attended = 1)`.mapWith(Number),
       collected: sql<number>`(SELECT COALESCE(SUM(b.price), 0) FROM bookings AS b WHERE b.event_id = ${events}.id AND b.status = 'approved')`.mapWith(Number),
     })
     .from(events)

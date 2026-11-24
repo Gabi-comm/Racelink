@@ -22,7 +22,6 @@ export async function getRunnerDashboard(userId: string) {
         distanceLabel: bookings.distanceLabel,
         status: bookings.status,
         bibNumber: bookings.bibNumber,
-        attended: bookings.attended,
       })
       .from(bookings)
       .innerJoin(events, eq(events.id, bookings.eventId))

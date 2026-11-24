@@ -37,8 +37,6 @@ export async function getRegistrations(actor: CurrentUser, eventId: number) {
       tshirtSize: bookings.tshirtSize,
       status: bookings.status,
       bibNumber: bookings.bibNumber,
-      attended: bookings.attended,
-      checkedInAt: bookings.checkedInAt,
       createdAt: bookings.createdAt,
     })
     .from(bookings)
@@ -81,7 +79,6 @@ export async function getRegistrations(actor: CurrentUser, eventId: number) {
       approved: countOf("approved"),
       rejected: countOf("rejected"),
       cancelled: countOf("cancelled"),
-      checkedIn: list.filter((r) => r.attended).length,
     },
   };
 }
@@ -127,7 +124,6 @@ export async function getParticipants(actor: CurrentUser) {
         tshirtSize: bookings.tshirtSize,
         status: bookings.status,
         bibNumber: bookings.bibNumber,
-        attended: bookings.attended,
         createdAt: bookings.createdAt,
       })
       .from(bookings)
