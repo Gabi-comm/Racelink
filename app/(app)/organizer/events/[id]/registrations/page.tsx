@@ -13,7 +13,7 @@ import { formatDate, formatPeso } from "@/lib/events";
 import { getRegistrations, type Registration } from "@/lib/queries/registrations";
 import { requireUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
-import { BibEditor, ReviewButtons, UndoConfirmButton } from "@/components/organizer/review-actions";
+import { BibEditor, RefundStatus, ReviewButtons, UndoConfirmButton } from "@/components/organizer/review-actions";
 
 export const metadata: Metadata = { title: "Registrations" };
 
@@ -127,8 +127,9 @@ async function Registrations({
                 <TableHead className="pl-4">Runner</TableHead>
                 <TableHead>Entry</TableHead>
                 <TableHead>Payment</TableHead>
-                <TableHead>Status</TableHead>
+                {filter !== "cancelled" && <TableHead>Status</TableHead>}
                 <TableHead className="text-right">Bib</TableHead>
+                {filter === "cancelled" && <TableHead>Status</TableHead>}
                 <TableHead className="pr-4 text-right">
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -136,7 +137,7 @@ async function Registrations({
             </TableHeader>
             <TableBody key={`${filter}|${q}`} className="stagger">
               {shown.map((r) => (
-                <Row key={r.id} r={r} />
+                <Row key={r.id} r={r} refundTab={filter === "cancelled"} />
               ))}
             </TableBody>
           </Table>
@@ -146,7 +147,7 @@ async function Registrations({
   );
 }
 
-function Row({ r }: { r: Registration }) {
+function Row({ r, refundTab }: { r: Registration; refundTab: boolean }) {
   return (
     <TableRow className="align-top">
       <TableCell className="pl-4">
@@ -179,15 +180,22 @@ function Row({ r }: { r: Registration }) {
           <p className="text-sm text-muted-foreground">No receipt</p>
         )}
       </TableCell>
-      <TableCell>
-        <BookingStatusMark status={r.status} />
-        {r.status === "rejected" && r.proof?.reviewNote && (
-          <p className="mt-1 max-w-48 text-xs text-muted-foreground">{r.proof.reviewNote}</p>
-        )}
-      </TableCell>
+      {!refundTab && (
+        <TableCell>
+          <BookingStatusMark status={r.status} />
+          {r.status === "rejected" && r.proof?.reviewNote && (
+            <p className="mt-1 max-w-48 text-xs text-muted-foreground">{r.proof.reviewNote}</p>
+          )}
+        </TableCell>
+      )}
       <TableCell className="text-right">
         {r.status === "approved" ? <BibEditor bookingId={r.id} bib={r.bibNumber} /> : <span className="text-muted-foreground">—</span>}
       </TableCell>
+      {refundTab && (
+        <TableCell>
+          <RefundStatus refund={r.refund} runnerName={r.runnerName} receiptId={r.proof?.id} />
+        </TableCell>
+      )}
       <TableCell className="pr-4">
         {r.status === "pending" && <ReviewButtons bookingId={r.id} runnerName={r.runnerName} />}
         {r.status === "approved" && (

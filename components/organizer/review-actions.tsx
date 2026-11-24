@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState, useTransition } from "react";
-import { Check, Pencil, Undo2, X } from "lucide-react";
+import { Check, CheckCircle2, Pencil, Undo2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { approveBooking, rejectBooking, setBib, undoApproval } from "@/app/(app)/organizer/events/[id]/registrations/actions";
+import { StatusMark } from "@/components/status-badge";
+import { formatPeso } from "@/lib/events";
+import { approveBooking, rejectBooking, processRefund, setBib, undoApproval } from "@/app/(app)/organizer/events/[id]/registrations/actions";
 
 type Result = { ok: true; message: string } | { ok: false; error: string };
 
@@ -177,5 +179,96 @@ export function BibEditor({ bookingId, bib }: { bookingId: number; bib: number |
         <X aria-hidden />
       </Button>
     </form>
+  );
+}
+
+type RefundInfo = {
+  id: number;
+  reason: string;
+  email: string;
+  phone: string;
+  amount: number;
+  status: "requested" | "processed";
+  createdAt: Date;
+  processedAt: Date | null;
+};
+
+const stamp = (d: Date) =>
+  new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }).format(d);
+
+// refund column on the Cancelled tab: nothing, Review Refund (opens the runner's request), or Refund Processed
+export function RefundStatus({ refund, runnerName, receiptId }: { refund: RefundInfo | null; runnerName: string; receiptId?: number }) {
+  const [pending, run] = useRun();
+  const [open, setOpen] = useState(false);
+
+  if (!refund) return <span className="text-xs text-muted-foreground">No refund requested</span>;
+  if (refund.status === "processed") {
+    return (
+      <div>
+        <StatusMark tone="success" icon={CheckCircle2}>
+          Refund Processed
+        </StatusMark>
+        {refund.processedAt && <p className="mt-0.5 text-xs text-muted-foreground">{stamp(refund.processedAt)}</p>}
+      </div>
+    );
+  }
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <Button size="sm" onClick={() => setOpen(true)}>
+        Review Refund
+      </Button>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{runnerName}&apos;s refund request</DialogTitle>
+          <DialogDescription>Sent {stamp(refund.createdAt)}. Send the refund, then mark it as processed.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">Reason</p>
+            <p className="mt-1 text-sm whitespace-pre-line">{refund.reason}</p>
+          </div>
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+            <div>
+              <dt className="text-xs font-medium text-muted-foreground">Amount to refund</dt>
+              <dd className="mt-0.5 font-display text-lg font-bold tabular-nums">{formatPeso(refund.amount)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-muted-foreground">Receipt</dt>
+              <dd className="mt-1">
+                {receiptId ? (
+                  <a href={`/api/receipts/${receiptId}`} target="_blank" rel="noreferrer" className="font-medium text-primary hover:underline">
+                    View receipt
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground">No receipt</span>
+                )}
+              </dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-xs font-medium text-muted-foreground">Email</dt>
+              <dd className="mt-0.5 break-all">
+                <a href={`mailto:${refund.email}`} className="hover:underline">
+                  {refund.email}
+                </a>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-muted-foreground">Mobile number</dt>
+              <dd className="mt-0.5 tabular-nums">
+                <a href={`tel:${refund.phone.replace(/\s/g, "")}`} className="hover:underline">
+                  {refund.phone}
+                </a>
+              </dd>
+            </div>
+          </dl>
+        </div>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>Close</DialogClose>
+          <Button disabled={pending} onClick={() => run(() => processRefund(refund.id), () => setOpen(false))}>
+            <Check aria-hidden /> {pending ? "Processing…" : "Process"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

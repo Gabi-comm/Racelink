@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { bookings, events, paymentProofs } from "@/lib/db/schema";
+import { bookings, events, paymentProofs, refundRequests } from "@/lib/db/schema";
 import { managedBooking } from "@/lib/queries/registrations";
 import { canManageEvents } from "@/lib/roles";
 import { getCurrentUser } from "@/lib/session";
@@ -186,4 +186,25 @@ export async function setBib(bookingId: number, bib: number): Promise<Result> {
   }
   refresh(booking.eventId);
   return { ok: true, message: `Bib set to ${String(parsed.data).padStart(4, "0")}.` };
+}
+
+export async function processRefund(refundId: number): Promise<Result> {
+  const user = await reviewer();
+  if (!user) return { ok: false, error: "Only organizers can process refunds." };
+  const [refund] = await db
+    .select({ bookingId: refundRequests.bookingId })
+    .from(refundRequests)
+    .where(eq(refundRequests.id, refundId))
+    .limit(1);
+  const booking = refund ? await managedBooking(user, refund.bookingId) : null;
+  if (!booking) return { ok: false, error: "That refund request doesn't exist or isn't for your race." };
+
+  const res = await db
+    .update(refundRequests)
+    .set({ status: "processed", processedBy: user.id, processedAt: new Date() })
+    .where(and(eq(refundRequests.id, refundId), eq(refundRequests.status, "requested")));
+  if (res[0].affectedRows === 0) return { ok: false, error: "This refund was already processed. Refresh to see its status." };
+
+  refresh(booking.eventId);
+  return { ok: true, message: "Refund marked as processed." };
 }

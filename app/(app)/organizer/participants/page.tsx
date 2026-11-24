@@ -4,7 +4,7 @@ import Form from "next/form";
 import Link from "next/link";
 import { Download, Search } from "lucide-react";
 import { FilterTabs } from "@/components/filter-tabs";
-import { BibEditor, ReviewButtons, UndoConfirmButton } from "@/components/organizer/review-actions";
+import { BibEditor, RefundStatus, ReviewButtons, UndoConfirmButton } from "@/components/organizer/review-actions";
 import { UrlSelect } from "@/components/organizer/url-select";
 import { EmptyState, PageHeader, Stat } from "@/components/stat";
 import { BookingStatusMark } from "@/components/status-badge";
@@ -135,8 +135,10 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
                 {!race && <TableHead>Race</TableHead>}
                 <TableHead>Entry</TableHead>
                 <TableHead>Payment</TableHead>
-                <TableHead>Status</TableHead>
+                {/* on the Cancelled tab every row is cancelled, so Status tracks the refund instead */}
+                {status !== "cancelled" && <TableHead>Status</TableHead>}
                 <TableHead className="text-right">Bib</TableHead>
+                {status === "cancelled" && <TableHead>Status</TableHead>}
                 <TableHead className="pr-4 text-right">
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -145,7 +147,7 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
             {/* keyed by the filters so the rows fade in again on every change */}
             <TableBody key={`${race?.id ?? "all"}|${status}|${q}`} className="stagger">
               {shown.map((p) => (
-                <Row key={p.id} p={p} showRace={!race} />
+                <Row key={p.id} p={p} showRace={!race} refundTab={status === "cancelled"} />
               ))}
             </TableBody>
           </Table>
@@ -158,7 +160,7 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
   );
 }
 
-function Row({ p, showRace }: { p: Participant; showRace: boolean }) {
+function Row({ p, showRace, refundTab }: { p: Participant; showRace: boolean; refundTab: boolean }) {
   return (
     <TableRow className="align-top">
       <TableCell className="pl-4">
@@ -194,13 +196,20 @@ function Row({ p, showRace }: { p: Participant; showRace: boolean }) {
           <p className="text-sm text-muted-foreground">No receipt</p>
         )}
       </TableCell>
-      <TableCell>
-        <BookingStatusMark status={p.status} />
-        {p.status === "rejected" && p.proof?.reviewNote && <p className="mt-1 max-w-48 text-xs text-muted-foreground">{p.proof.reviewNote}</p>}
-      </TableCell>
+      {!refundTab && (
+        <TableCell>
+          <BookingStatusMark status={p.status} />
+          {p.status === "rejected" && p.proof?.reviewNote && <p className="mt-1 max-w-48 text-xs text-muted-foreground">{p.proof.reviewNote}</p>}
+        </TableCell>
+      )}
       <TableCell className="text-right">
         {p.status === "approved" ? <BibEditor bookingId={p.id} bib={p.bibNumber} /> : <span className="text-muted-foreground">—</span>}
       </TableCell>
+      {refundTab && (
+        <TableCell>
+          <RefundStatus refund={p.refund} runnerName={p.runnerName} receiptId={p.proof?.id} />
+        </TableCell>
+      )}
       <TableCell className="pr-4">
         {p.status === "pending" && <ReviewButtons bookingId={p.id} runnerName={p.runnerName} />}
         {p.status === "approved" && (

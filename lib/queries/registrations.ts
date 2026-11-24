@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { bookings, events, paymentProofs, runnerProfiles, user } from "@/lib/db/schema";
 import type { CurrentUser } from "@/lib/session";
 import { canManageEvents } from "@/lib/roles";
+import { currentRefunds } from "@/lib/queries/refunds";
 
 export async function getRegistrations(actor: CurrentUser, eventId: number) {
   await connection();
@@ -68,7 +69,8 @@ export async function getRegistrations(actor: CurrentUser, eventId: number) {
   const latest = new Map<number, (typeof proofs)[number]>();
   for (const p of proofs) if (!latest.has(p.bookingId)) latest.set(p.bookingId, p);
 
-  const list = rows.map((r) => ({ ...r, proof: latest.get(r.id) ?? null }));
+  const refunds = await currentRefunds(rows);
+  const list = rows.map((r) => ({ ...r, proof: latest.get(r.id) ?? null, refund: refunds.get(r.id) ?? null }));
   const countOf = (s: string) => list.filter((r) => r.status === s).length;
 
   return {
@@ -155,7 +157,9 @@ export async function getParticipants(actor: CurrentUser) {
   const latest = new Map<number, (typeof proofs)[number]>();
   for (const p of proofs) if (!latest.has(p.bookingId)) latest.set(p.bookingId, p);
 
-  return { races, list: rows.map((r) => ({ ...r, proof: latest.get(r.id) ?? null })) };
+  const refunds = await currentRefunds(rows);
+
+  return { races, list: rows.map((r) => ({ ...r, proof: latest.get(r.id) ?? null, refund: refunds.get(r.id) ?? null })) };
 }
 
 export type Participant = Awaited<ReturnType<typeof getParticipants>>["list"][number];

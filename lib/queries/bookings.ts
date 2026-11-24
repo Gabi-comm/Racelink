@@ -4,6 +4,7 @@ import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { bookings, eventDistances, events, eventSizes, paymentProofs, runnerProfiles, TSHIRT_SIZES } from "@/lib/db/schema";
 import { todayInManila } from "@/lib/events";
+import { currentRefunds } from "@/lib/queries/refunds";
 
 export const ACTIVE = ["pending", "approved"] as const;
 
@@ -115,6 +116,13 @@ export async function getMyBookings(userId: string) {
     .from(paymentProofs)
     .where(inArray(paymentProofs.bookingId, rows.map((r) => r.id)))
     .orderBy(desc(paymentProofs.createdAt), desc(paymentProofs.id));
+  const refunds = await currentRefunds(rows);
 
-  return rows.map((r) => ({ ...r, proofs: proofs.filter((p) => p.bookingId === r.id) }));
+  return rows.map((r) => ({ ...r, proofs: proofs.filter((p) => p.bookingId === r.id), refund: refunds.get(r.id) ?? null }));
+}
+
+// prefill for the refund form
+export async function getRunnerPhone(userId: string) {
+  const [p] = await db.select({ phone: runnerProfiles.phone }).from(runnerProfiles).where(eq(runnerProfiles.userId, userId)).limit(1);
+  return p?.phone ?? "";
 }

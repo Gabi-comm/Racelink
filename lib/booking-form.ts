@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { GENDERS, TSHIRT_SIZES } from "@/lib/constants";
 
-const phone = (label: string) =>
+export const phone = (label: string) =>
   z
     .string()
     .trim()

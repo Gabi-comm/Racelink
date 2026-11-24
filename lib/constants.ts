@@ -8,6 +8,7 @@ export const BOOKING_STATUSES = ["pending", "approved", "rejected", "cancelled"]
 export const PAYMENT_STATUSES = ["pending", "approved", "rejected"] as const;
 export const PAYMENT_METHODS = ["gcash", "bank"] as const;
 export const REQUEST_STATUSES = ["pending", "approved", "rejected"] as const;
+export const REFUND_STATUSES = ["requested", "processed"] as const;
 
 export type EventStatus = (typeof EVENT_STATUSES)[number];
 export type TshirtSize = (typeof TSHIRT_SIZES)[number];

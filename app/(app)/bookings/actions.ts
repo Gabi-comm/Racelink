@@ -2,10 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { and, count, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, inArray } from "drizzle-orm";
+import { z } from "zod";
 import { db } from "@/lib/db";
-import { bookings, eventDistances, events, eventSizes, paymentProofs, runnerProfiles } from "@/lib/db/schema";
-import { fieldErrors, readForm, registerSchema, resubmitSchema, type FormState } from "@/lib/booking-form";
+import { bookings, eventDistances, events, eventSizes, paymentProofs, refundRequests, runnerProfiles } from "@/lib/db/schema";
+import { fieldErrors, phone, readForm, registerSchema, resubmitSchema, type FormState } from "@/lib/booking-form";
 import { registrationBlock } from "@/lib/queries/bookings";
 import { getCurrentUser } from "@/lib/session";
 import { deleteFile } from "@/lib/storage";
@@ -77,6 +78,15 @@ export async function register(eventId: number, _prev: FormState, form: FormData
         .from(bookings)
         .where(and(eq(bookings.eventId, eventId), eq(bookings.userId, user.id)));
       if (existing && existing.status !== "cancelled") throw new Refused("You're already registered for this race.");
+      if (existing) {
+        const [refund] = await tx
+          .select({ status: refundRequests.status })
+          .from(refundRequests)
+          .where(eq(refundRequests.bookingId, existing.id))
+          .orderBy(desc(refundRequests.id))
+          .limit(1);
+        if (refund?.status === "requested") throw new Refused("Your refund for this race is still being reviewed. Register again once it's processed.");
+      }
 
       const values = {
         distanceId: distance.id,
@@ -87,6 +97,7 @@ export async function register(eventId: number, _prev: FormState, form: FormData
         bibNumber: null,
         attended: false,
         checkedInAt: null,
+        createdAt: new Date(),
       };
       let id: number;
       if (existing) {
@@ -170,5 +181,58 @@ export async function cancelBooking(bookingId: number): Promise<{ ok: boolean; e
   await Promise.all(proofs.map((p) => deleteFile(p.key)));
 
   refresh();
+  return { ok: true };
+}
+
+const refundSchema = z.object({
+  reason: z.string().trim().min(10, "Tell the organizer why, at least 10 characters.").max(500, "Keep the reason under 500 characters."),
+  email: z.string().trim().email("Enter a valid email address.").max(255),
+  phone: phone("mobile number"),
+});
+export type RefundFormState = { ok?: boolean; error?: string; fieldErrors?: Partial<Record<"reason" | "email" | "phone", string>> };
+
+// cancels a paid booking and files a refund request in one step; the receipt is kept for the organizer
+export async function requestRefund(bookingId: number, _prev: RefundFormState, form: FormData): Promise<RefundFormState> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Your session ended. Log in again." };
+
+  const parsed = refundSchema.safeParse({ reason: form.get("reason") ?? "", email: form.get("email") ?? "", phone: form.get("phone") ?? "" });
+  if (!parsed.success) {
+    const fe: RefundFormState["fieldErrors"] = {};
+    for (const i of parsed.error.issues) {
+      const k = i.path[0] as "reason" | "email" | "phone";
+      fe[k] ??= i.message;
+    }
+    return { error: "Some details need fixing.", fieldErrors: fe };
+  }
+
+  try {
+    await db.transaction(async (tx) => {
+      const [b] = await tx
+        .select({ id: bookings.id, status: bookings.status, price: bookings.price })
+        .from(bookings)
+        .where(and(eq(bookings.id, bookingId), eq(bookings.userId, user.id)))
+        .for("update");
+      if (!b) throw new Refused("That booking doesn't exist.");
+      if (b.status !== "pending" && b.status !== "approved") {
+        throw new Refused(b.status === "cancelled" ? "This registration is already cancelled." : "Only paid registrations can be refunded.");
+      }
+      const [proof] = await tx
+        .select({ amount: paymentProofs.amount })
+        .from(paymentProofs)
+        .where(eq(paymentProofs.bookingId, bookingId))
+        .orderBy(desc(paymentProofs.id))
+        .limit(1);
+
+      await tx.update(bookings).set({ status: "cancelled", bibNumber: null }).where(eq(bookings.id, bookingId));
+      await tx.insert(refundRequests).values({ bookingId, ...parsed.data, amount: proof?.amount ?? b.price });
+    });
+  } catch (err) {
+    if (err instanceof Refused) return { error: err.message };
+    throw err;
+  }
+
+  refresh();
+  revalidatePath("/organizer/participants");
   return { ok: true };
 }

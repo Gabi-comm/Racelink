@@ -2,16 +2,16 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PaymentDetails } from "@/components/payment-details";
-import { Ban, CalendarDays, CheckCircle2, Hourglass, MapPin, Receipt, Route, Shirt, Wallet } from "lucide-react";
+import { Ban, CalendarDays, CheckCircle2, Clock3, Hourglass, MapPin, Receipt, Route, Shirt, Wallet } from "lucide-react";
 import { RaceProgress } from "@/components/runner/race-progress";
 import { BookingStatusMark, StatusMark } from "@/components/status-badge";
 import { buttonVariants } from "@/components/ui/button";
 import { dateParts, formatDate, formatPeso, formatTime, todayInManila } from "@/lib/events";
-import { getMyBookings, type MyBooking } from "@/lib/queries/bookings";
+import { getMyBookings, getRunnerPhone, type MyBooking } from "@/lib/queries/bookings";
 import { requireUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
 import { MiniBib } from "@/components/mini-bib";
-import { CancelBookingButton, ResubmitForm } from "./booking-actions";
+import { CancelBookingButton, RefundRequestButton, ResubmitForm } from "./booking-actions";
 
 export const metadata: Metadata = { title: "My bookings" };
 
@@ -30,7 +30,8 @@ export default function BookingsPage({ searchParams }: PageProps<"/bookings">) {
 
 async function Bookings({ searchParams }: Pick<PageProps<"/bookings">, "searchParams">) {
   const user = await requireUser();
-  const [list, query] = await Promise.all([getMyBookings(user.id), searchParams]);
+  const [list, phone, query] = await Promise.all([getMyBookings(user.id), getRunnerPhone(user.id), searchParams]);
+  const contact = { email: user.email, phone };
   const justRegistered = Number(query.registered);
   const today = todayInManila();
   const isPast = (b: MyBooking) => b.eventDate < today || b.status === "cancelled" || b.eventStatus === "cancelled";
@@ -56,8 +57,8 @@ async function Bookings({ searchParams }: Pick<PageProps<"/bookings">, "searchPa
           <CheckCircle2 className="size-4" aria-hidden /> Registration sent. The organizer will check your receipt.
         </p>
       )}
-      <Group title="Upcoming" items={upcoming} highlight={justRegistered} />
-      {past.length > 0 && <Group title="Past and cancelled" items={past} highlight={justRegistered} />}
+      <Group title="Upcoming" items={upcoming} highlight={justRegistered} contact={contact} />
+      {past.length > 0 && <Group title="Past and cancelled" items={past} highlight={justRegistered} contact={contact} />}
     </>
   );
 }
@@ -69,7 +70,9 @@ const STATUS_LABEL: Record<MyBooking["status"], string> = {
   cancelled: "Cancelled",
 };
 
-function Group({ title, items, highlight }: { title: string; items: MyBooking[]; highlight: number }) {
+type Contact = { email: string; phone: string };
+
+function Group({ title, items, highlight, contact }: { title: string; items: MyBooking[]; highlight: number; contact: Contact }) {
   return (
     <section className="grid gap-3">
       <h2 className="font-display text-lg font-bold">
@@ -85,7 +88,7 @@ function Group({ title, items, highlight }: { title: string; items: MyBooking[];
       ) : (
         <ul className="grid gap-4">
           {items.map((b) => (
-            <BookingCard key={b.id} booking={b} highlight={b.id === highlight} />
+            <BookingCard key={b.id} booking={b} highlight={b.id === highlight} contact={contact} />
           ))}
         </ul>
       )}
@@ -93,7 +96,7 @@ function Group({ title, items, highlight }: { title: string; items: MyBooking[];
   );
 }
 
-function BookingCard({ booking: b, highlight }: { booking: MyBooking; highlight: boolean }) {
+function BookingCard({ booking: b, highlight, contact }: { booking: MyBooking; highlight: boolean; contact: Contact }) {
   const latest = b.proofs[0];
   const start = formatTime(b.startTime);
   const raceCancelled = b.eventStatus === "cancelled";
@@ -101,7 +104,9 @@ function BookingCard({ booking: b, highlight }: { booking: MyBooking; highlight:
   const inactive = b.status === "cancelled" || raceCancelled;
   const hasBib = b.status === "approved" && b.bibNumber !== null;
   const showReceipt = latest && b.status !== "cancelled";
-  const canCancel = b.status === "pending" || b.status === "rejected";
+  // money already sent (pending or confirmed) goes through a refund request; a rejected payment just cancels
+  const canRefund = b.status === "pending" || b.status === "approved";
+  const canCancel = b.status === "rejected" && !raceCancelled;
   const canRegisterAgain = b.status === "cancelled" && b.eventStatus === "open";
 
   return (
@@ -129,6 +134,16 @@ function BookingCard({ booking: b, highlight }: { booking: MyBooking; highlight:
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <BookingStatusMark status={b.status} label={STATUS_LABEL[b.status]} />
+                {b.refund?.status === "requested" && (
+                  <StatusMark tone="warning" icon={Clock3}>
+                    Refund requested
+                  </StatusMark>
+                )}
+                {b.refund?.status === "processed" && (
+                  <StatusMark tone="success" icon={CheckCircle2}>
+                    Refund processed
+                  </StatusMark>
+                )}
                 {raceCancelled && (
                   <StatusMark tone="danger" icon={Ban}>
                     Race cancelled
@@ -178,7 +193,7 @@ function BookingCard({ booking: b, highlight }: { booking: MyBooking; highlight:
         ) : null}
       </div>
 
-      {(showReceipt || canCancel || canRegisterAgain) && (
+      {(showReceipt || canCancel || canRefund || canRegisterAgain) && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-t bg-muted/40 px-5 py-2.5 md:px-6">
           {showReceipt ? (
             <a
@@ -195,6 +210,16 @@ function BookingCard({ booking: b, highlight }: { booking: MyBooking; highlight:
           {/* -mx lines the ghost button's text up with the card edge */}
           <div className="-mx-2.5 flex flex-wrap gap-2">
             {canCancel && <CancelBookingButton bookingId={b.id} title={b.title} />}
+            {canRefund && (
+              <RefundRequestButton
+                bookingId={b.id}
+                title={b.title}
+                amount={formatPeso(latest?.amount ?? b.price)}
+                email={contact.email}
+                phone={contact.phone}
+                raceCancelled={raceCancelled}
+              />
+            )}
             {canRegisterAgain && (
               <Link href={`/register/${b.eventId}`} className={buttonVariants({ variant: "outline" })}>
                 Register again
@@ -236,6 +261,12 @@ function StatusNote({ booking: b }: { booking: MyBooking }) {
         <PaymentDetails info={b} className="mt-2 text-muted-foreground" />
       </div>
     );
+  }
+  if (b.refund?.status === "requested") {
+    return <p className="text-sm text-muted-foreground">You cancelled this registration. The organizer is reviewing your refund of {formatPeso(b.refund.amount)}.</p>;
+  }
+  if (b.refund?.status === "processed") {
+    return <p className="text-sm text-muted-foreground">You cancelled this registration. Your refund of {formatPeso(b.refund.amount)} was sent. Check your GCash or bank account.</p>;
   }
   return <p className="text-sm text-muted-foreground">You cancelled this registration.</p>;
 }

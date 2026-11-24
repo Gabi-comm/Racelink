@@ -14,10 +14,10 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
-import { BOOKING_STATUSES, EVENT_STATUSES, GENDERS, PAYMENT_METHODS, PAYMENT_STATUSES, REQUEST_STATUSES, TSHIRT_SIZES } from "@/lib/constants";
+import { BOOKING_STATUSES, EVENT_STATUSES, GENDERS, PAYMENT_METHODS, PAYMENT_STATUSES, REFUND_STATUSES, REQUEST_STATUSES, TSHIRT_SIZES } from "@/lib/constants";
 import type { AnyMySqlColumn } from "drizzle-orm/mysql-core";
 
-export { BOOKING_STATUSES, EVENT_STATUSES, GENDERS, PAYMENT_STATUSES, REQUEST_STATUSES, ROLES, TSHIRT_SIZES } from "@/lib/constants";
+export { BOOKING_STATUSES, EVENT_STATUSES, GENDERS, PAYMENT_STATUSES, REFUND_STATUSES, REQUEST_STATUSES, ROLES, TSHIRT_SIZES } from "@/lib/constants";
 
 
 const createdAt = () => timestamp("created_at", { fsp: 3 }).defaultNow().notNull();
@@ -223,6 +223,26 @@ export const paymentProofs = mysqlTable(
     index("payment_proofs_status_idx").on(t.status),
     check("payment_proofs_amount_check", sql`${t.amount} > 0`),
   ],
+);
+
+// runner cancels a paid booking and asks for the fee back; organizer marks it processed
+export const refundRequests = mysqlTable(
+  "refund_requests",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    bookingId: int("booking_id")
+      .notNull()
+      .references(() => bookings.id, { onDelete: "cascade" }),
+    reason: varchar("reason", { length: 500 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 30 }).notNull(),
+    amount: decimal("amount", { precision: 10, scale: 2, mode: "number" }).notNull(),
+    status: mysqlEnum("status", REFUND_STATUSES).default("requested").notNull(),
+    processedBy: varchar("processed_by", { length: 36 }).references(() => user.id, { onDelete: "set null" }),
+    processedAt: timestamp("processed_at", { fsp: 3 }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("refund_requests_booking_idx").on(t.bookingId), index("refund_requests_status_idx").on(t.status)],
 );
 
 export const eventDocuments = mysqlTable(
