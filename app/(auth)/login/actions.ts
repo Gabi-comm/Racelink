@@ -8,6 +8,7 @@ import { auth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { user as users } from "@/lib/db/schema";
+import { strongPassword } from "@/lib/password";
 import { homeFor, isRole, safeNext } from "@/lib/roles";
 
 export type AuthState = {
@@ -27,10 +28,7 @@ const signUpSchema = z
   .object({
     name: z.string().trim().min(2, "Enter your full name.").max(100, "Name is too long."),
     email,
-    password: z
-      .string()
-      .min(8, "Use at least 8 characters.")
-      .refine((p) => new TextEncoder().encode(p).length <= 72, "Password is too long."),
+    password: strongPassword,
     confirm: z.string(),
   })
   .refine((d) => d.password === d.confirm, { path: ["confirm"], message: "Passwords don't match." });

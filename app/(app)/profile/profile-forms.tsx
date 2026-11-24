@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useTransition, type ReactNode } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordChecklist } from "@/components/password-checklist";
 import { GENDERS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { changePassword, saveDetails, saveName, type ProfileState } from "./actions";
@@ -94,13 +95,21 @@ export function DetailsForm({ profile }: { profile: Profile }) {
 
 export function PasswordForm() {
   const { state, pending, ref, onSubmit, err } = useForm(changePassword, true);
+  const [next, setNext] = useState("");
   return (
-    <form ref={ref} onSubmit={onSubmit} noValidate className="grid gap-4 sm:grid-cols-2">
+    <form ref={ref} onSubmit={onSubmit} onReset={() => setNext("")} noValidate className="grid gap-4 sm:grid-cols-2">
       <Field label="Current password" error={err.currentPassword} className="sm:col-span-2 sm:max-w-[calc(50%-0.5rem)]">
         <Input name="currentPassword" type="password" autoComplete="current-password" aria-invalid={!!err.currentPassword || undefined} />
       </Field>
-      <Field label="New password" hint="At least 8 characters." error={err.newPassword}>
-        <Input name="newPassword" type="password" autoComplete="new-password" aria-invalid={!!err.newPassword || undefined} />
+      <Field label="New password" error={err.newPassword}>
+        <Input
+          name="newPassword"
+          type="password"
+          autoComplete="new-password"
+          onChange={(e) => setNext(e.target.value)}
+          aria-invalid={!!err.newPassword || undefined}
+        />
+        <PasswordChecklist value={next} className="mt-0.5" />
       </Field>
       <Field label="Confirm new password" error={err.confirm}>
         <Input name="confirm" type="password" autoComplete="new-password" aria-invalid={!!err.confirm || undefined} />

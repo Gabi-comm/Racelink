@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordChecklist } from "@/components/password-checklist";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSearchParams } from "next/navigation";
 import { safeNext } from "@/lib/roles";
@@ -131,14 +132,7 @@ function SignUpForm({ next }: { next: string }) {
         defaultValue={state.values?.email}
         error={state.fieldErrors?.email}
       />
-      <Field
-        label="Password"
-        name="password"
-        type="password"
-        autoComplete="new-password"
-        hint="At least 8 characters."
-        error={state.fieldErrors?.password}
-      />
+      <NewPasswordField error={state.fieldErrors?.password} />
       <Field
         label="Confirm password"
         name="confirm"
@@ -151,6 +145,34 @@ function SignUpForm({ next }: { next: string }) {
         {pending ? "Creating account…" : "Create Account"}
       </Button>
     </form>
+  );
+}
+
+// password field with the live requirement list under it
+function NewPasswordField({ error }: { error?: string }) {
+  const [value, setValue] = useState("");
+  const id = useId();
+  return (
+    <div className="grid gap-1.5">
+      <Label htmlFor={id}>Password</Label>
+      <Input
+        id={id}
+        name="password"
+        type="password"
+        autoComplete="new-password"
+        required
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={`${id}-rules${error ? ` ${id}-error` : ""}`}
+      />
+      <PasswordChecklist id={`${id}-rules`} value={value} />
+      {error && (
+        <p id={`${id}-error`} className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
 

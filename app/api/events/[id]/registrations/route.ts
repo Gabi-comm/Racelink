@@ -1,13 +1,7 @@
+import { csvResponse, slugify } from "@/lib/csv";
 import { getRegistrations } from "@/lib/queries/registrations";
 import { canManageEvents } from "@/lib/roles";
 import { getCurrentUser } from "@/lib/session";
-
-// csv cell, iwas formula injection sa Excel
-function cell(v: string | number | null | undefined) {
-  let s = v === null || v === undefined ? "" : String(v);
-  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
-  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
 
 export async function GET(_request: Request, ctx: RouteContext<"/api/events/[id]/registrations">) {
   const user = await getCurrentUser();
@@ -29,14 +23,5 @@ export async function GET(_request: Request, ctx: RouteContext<"/api/events/[id]
     r.distanceLabel, r.price.toFixed(2), r.tshirtSize, r.status, r.proof?.amount.toFixed(2), r.proof?.referenceNo,
     r.createdAt.toISOString(),
   ]);
-  const csv = [header, ...rows].map((row) => row.map(cell).join(",")).join("\r\n");
-  const slug = data.event.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "race";
-
-  return new Response(`﻿${csv}\r\n`, {
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${slug}-registrations.csv"`,
-      "Cache-Control": "no-store",
-    },
-  });
+  return csvResponse(header, rows, `${slugify(data.event.title, "race")}-registrations.csv`);
 }

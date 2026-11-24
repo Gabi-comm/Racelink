@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { APIError } from "better-auth/api";
+import { strongPassword } from "@/lib/password";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { fieldErrors, readForm, runnerDetailsSchema, type FormState } from "@/lib/booking-form";
@@ -55,10 +56,7 @@ export async function saveDetails(_prev: ProfileState, form: FormData): Promise<
 const passwordSchema = z
   .object({
     currentPassword: z.string().min(1, "Enter your current password."),
-    newPassword: z
-      .string()
-      .min(8, "Use at least 8 characters.")
-      .refine((p) => new TextEncoder().encode(p).length <= 72, "Password is too long."),
+    newPassword: strongPassword,
     confirm: z.string(),
   })
   .refine((d) => d.newPassword === d.confirm, { path: ["confirm"], message: "Passwords don't match." })

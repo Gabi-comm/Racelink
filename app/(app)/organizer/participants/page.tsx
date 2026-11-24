@@ -2,13 +2,14 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
-import { Download, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { FilterTabs } from "@/components/filter-tabs";
 import { BibEditor, RefundStatus, ReviewButtons, UndoConfirmButton } from "@/components/organizer/review-actions";
+import { ExportMenu } from "@/components/organizer/export-menu";
 import { UrlSelect } from "@/components/organizer/url-select";
+import { inTab, isParticipantTab, PARTICIPANT_TABS, type ParticipantTab } from "@/lib/participant-filters";
 import { EmptyState, PageHeader, Stat } from "@/components/stat";
 import { BookingStatusMark } from "@/components/status-badge";
-import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate, formatPeso } from "@/lib/events";
@@ -17,19 +18,6 @@ import { requireUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Manage Participants" };
 
-const STATUSES = [
-  { value: "pending", label: "Payments to review" },
-  { value: "approved", label: "Confirmed" },
-  { value: "rejected", label: "Rejected" },
-  { value: "cancelled", label: "Cancelled" },
-  { value: "all", label: "All" },
-] as const;
-type StatusFilter = (typeof STATUSES)[number]["value"];
-
-function matches(p: Participant, f: StatusFilter) {
-  if (f === "all") return true;
-  return p.status === f;
-}
 
 export default function ParticipantsPage({ searchParams }: PageProps<"/organizer/participants">) {
   return (
@@ -51,14 +39,14 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
 
   const eventId = Number(query.event);
   const race = races.find((r) => r.id === eventId) ?? null;
-  const status: StatusFilter = STATUSES.some((s) => s.value === query.status) ? (query.status as StatusFilter) : "pending";
+  const status: ParticipantTab = isParticipantTab(query.status) ? query.status : "pending";
   const q = typeof query.q === "string" ? query.q.trim() : "";
   const needle = q.toLowerCase();
 
   const inRace = race ? list.filter((p) => p.eventId === race.id) : list;
   const shown = inRace.filter(
     (p) =>
-      matches(p, status) &&
+      inTab(p, status) &&
       (!needle ||
         p.runnerName.toLowerCase().includes(needle) ||
         p.email.toLowerCase().includes(needle) ||
@@ -69,7 +57,9 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
   const pending = inRace.filter((p) => p.status === "pending");
   const fees = confirmed.reduce((t, p) => t + p.price, 0);
 
-  const href = (s: StatusFilter) => {
+  const tabCounts = Object.fromEntries(PARTICIPANT_TABS.map((t) => [t.value, inRace.filter((p) => inTab(p, t.value)).length])) as Record<ParticipantTab, number>;
+
+  const href = (s: ParticipantTab) => {
     const p = new URLSearchParams();
     if (race) p.set("event", String(race.id));
     if (s !== "pending") p.set("status", s);
@@ -107,18 +97,12 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
             <Input id="participant-search" name="q" defaultValue={q} placeholder="Name, email or bib" className="h-9 pl-8" />
           </div>
         </Form>
-        {race ? (
-          <a href={`/api/events/${race.id}/registrations`} className={buttonVariants({ variant: "outline", className: "h-9" })} download>
-            <Download aria-hidden /> Export CSV
-          </a>
-        ) : (
-          <p className="text-xs text-muted-foreground sm:max-w-40">Pick a race to export its list.</p>
-        )}
+        <ExportMenu key={status} tab={status} eventId={race?.id ?? null} counts={tabCounts} />
       </div>
 
       <FilterTabs
         label="Registration status"
-        items={STATUSES.map((s) => ({ href: href(s.value), label: s.label, count: inRace.filter((p) => matches(p, s.value)).length, active: status === s.value }))}
+        items={PARTICIPANT_TABS.map((s) => ({ href: href(s.value), label: s.label, count: tabCounts[s.value], active: status === s.value }))}
       />
 
       {shown.length === 0 ? (
