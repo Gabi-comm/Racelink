@@ -11,12 +11,15 @@ export function UrlSelect({
   value,
   options,
   className,
+  big,
 }: {
   param: string;
   label: string;
   value: string;
   options: { value: string; label: string }[];
   className?: string;
+  // tall select, label for screen readers only
+  big?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -26,7 +29,7 @@ export function UrlSelect({
 
   return (
     <div className={cn("grid gap-1", className)}>
-      <label htmlFor={id} className="text-xs font-medium text-muted-foreground">
+      <label htmlFor={id} className={cn("text-xs font-medium text-muted-foreground", big && "sr-only")}>
         {label}
       </label>
       <select
@@ -40,7 +43,10 @@ export function UrlSelect({
           const s = next.toString();
           startTransition(() => router.push(`${pathname}${s ? `?${s}` : ""}`));
         }}
-        className="h-9 w-full min-w-0 rounded-lg border border-input bg-card px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-busy:opacity-60"
+        className={cn(
+          "h-9 w-full min-w-0 rounded-lg border border-input bg-card px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-busy:opacity-60",
+          big && "h-12 rounded-xl px-3.5 text-base",
+        )}
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>

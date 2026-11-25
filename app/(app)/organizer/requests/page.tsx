@@ -1,10 +1,9 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, CheckCircle2, Clock3, Mail, MapPin, Phone, Route, Users, XCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { FilterTabs } from "@/components/filter-tabs";
 import { EmptyState, PageHeader } from "@/components/stat";
-import { StatusMark } from "@/components/status-badge";
 import { REQUEST_STATUSES, type RequestStatus } from "@/lib/constants";
 import { formatDate } from "@/lib/events";
 import { getRequests, type RaceRequestRow } from "@/lib/queries/requests";
@@ -21,8 +20,9 @@ export default function RequestsPage({ searchParams }: PageProps<"/organizer/req
   return (
     <div className="grid gap-6">
       <PageHeader
+        eyebrow="Incoming partners"
         title="Request forms"
-        description="Race requests from organizations. Approving one creates a draft race for you to finish. Every organizer sees the same list."
+        description="Review race proposals from organizations. Approving one creates a draft race for you to finish."
       />
       <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
         <Requests searchParams={searchParams} />
@@ -58,9 +58,9 @@ async function Requests({ searchParams }: Pick<PageProps<"/organizer/requests">,
           }
         />
       ) : (
-        <ul key={status} className="stagger grid gap-4 lg:grid-cols-2">
-          {list.map((r) => (
-            <RequestCard key={r.id} r={r} />
+        <ul key={status} className="stagger grid gap-5 lg:grid-cols-2">
+          {list.map((r, i) => (
+            <RequestCard key={r.id} r={r} n={i + 1} />
           ))}
         </ul>
       )}
@@ -68,47 +68,63 @@ async function Requests({ searchParams }: Pick<PageProps<"/organizer/requests">,
   );
 }
 
-function RequestCard({ r }: { r: RaceRequestRow }) {
+// "2h ago" style, short
+function ago(d: Date) {
+  const mins = Math.max(1, Math.round((Date.now() - d.getTime()) / 60000));
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs / 24);
+  return days < 30 ? `${days}d ago` : submitted.format(d);
+}
+
+const tiny = "text-[0.7rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase";
+
+function RequestCard({ r, n }: { r: RaceRequestRow; n: number }) {
+  const pill =
+    r.status === "pending"
+      ? "bg-brand-light/20 text-link"
+      : r.status === "approved"
+        ? "bg-marking text-marking-foreground"
+        : "bg-destructive/10 text-destructive";
   return (
-    <li className="grid content-start gap-4 rounded-lg bg-card p-5 ring-1 ring-border">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-primary">{r.organization}</p>
-          <h2 className="font-display text-xl leading-tight font-bold">{r.raceTitle}</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">Sent {submitted.format(r.createdAt)}</p>
-        </div>
-        {r.status === "pending" ? (
-          <StatusMark tone="warning" icon={Clock3}>
-            Waiting
-          </StatusMark>
-        ) : r.status === "approved" ? (
-          <StatusMark tone="success" icon={CheckCircle2}>
-            Approved
-          </StatusMark>
-        ) : (
-          <StatusMark tone="danger" icon={XCircle}>
-            Rejected
-          </StatusMark>
-        )}
+    <li className="grid content-start gap-6 rounded-2xl bg-card p-6 ring-1 ring-border md:p-8">
+      <div className="flex items-start justify-between gap-3">
+        <p className={tiny}>Request {String(n).padStart(2, "0")}</p>
+        <span title={`Sent ${submitted.format(r.createdAt)}`} className={`rounded-full px-3 py-1 text-[0.7rem] font-bold tracking-[0.12em] uppercase ${pill}`}>
+          {r.status === "pending" ? ago(r.createdAt) : LABEL[r.status]}
+        </span>
       </div>
 
-      <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-        <Detail icon={CalendarDays} label="Preferred date" value={formatDate(r.proposedDate)} />
-        <Detail icon={MapPin} label="Location" value={r.location} />
-        <Detail icon={Users} label="Expected runners" value={r.expectedRunners ? r.expectedRunners.toLocaleString("en-PH") : "Not given"} />
-        <Detail icon={Route} label="Distances" value={r.distances ?? "Not given"} />
+      <div>
+        <p className={tiny}>Organization</p>
+        <p className="mt-1 font-semibold">{r.organization}</p>
+      </div>
+
+      <h2 className="font-[family-name:var(--font-oswald)] text-3xl leading-tight font-bold tracking-tight uppercase">{r.raceTitle}</h2>
+
+      <dl className="grid overflow-hidden rounded-xl text-sm ring-1 ring-border sm:grid-cols-2 [&>div]:p-4 [&>div:nth-child(-n+2)]:border-b">
+        <Detail label="Preferred date" value={formatDate(r.proposedDate)} />
+        <Detail label="Location" value={r.location} />
+        <Detail label="Expected runners" value={r.expectedRunners ? r.expectedRunners.toLocaleString("en-PH") : "Not given"} />
+        <Detail label="Distances" value={r.distances ?? "Not given"} />
       </dl>
 
-      {r.message && <p className="rounded-md bg-muted/60 px-3 py-2 text-sm leading-relaxed">{r.message}</p>}
+      {r.message && (
+        <div>
+          <p className={tiny}>Notes</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{r.message}</p>
+        </div>
+      )}
 
-      <div className="grid gap-1 border-t pt-3 text-sm">
-        <p className="font-semibold">{r.contactName}</p>
-        <a href={`mailto:${r.email}?subject=${encodeURIComponent(`Your RaceLink request: ${r.raceTitle}`)}`} className="flex items-center gap-2 text-primary hover:underline">
-          <Mail className="size-4" aria-hidden /> {r.email}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-1 border-t pt-5 text-sm">
+        <p>Contact: {r.contactName}</p>
+        <a href={`mailto:${r.email}?subject=${encodeURIComponent(`Your RaceLink request: ${r.raceTitle}`)}`} className="text-link hover:underline">
+          {r.email}
         </a>
         {r.phone && (
-          <a href={`tel:${r.phone}`} className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-            <Phone className="size-4" aria-hidden /> {r.phone}
+          <a href={`tel:${r.phone}`} className="text-muted-foreground hover:text-foreground">
+            {r.phone}
           </a>
         )}
       </div>
@@ -123,7 +139,7 @@ function RequestCard({ r }: { r: RaceRequestRow }) {
           </p>
           {r.reviewNote && <p className="text-foreground">Reason: {r.reviewNote}</p>}
           {r.eventId && (
-            <Link href={`/organizer/events/${r.eventId}`} className="inline-flex items-center gap-1 font-semibold text-primary hover:underline">
+            <Link href={`/organizer/events/${r.eventId}`} className="inline-flex items-center gap-1 font-semibold text-link hover:underline">
               Open race: {r.eventTitle} <ArrowRight className="size-3.5" aria-hidden />
             </Link>
           )}
@@ -133,14 +149,11 @@ function RequestCard({ r }: { r: RaceRequestRow }) {
   );
 }
 
-function Detail({ icon: Icon, label, value }: { icon: typeof MapPin; label: string; value: string }) {
+function Detail({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex gap-2">
-      <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-      <div>
-        <dt className="text-xs text-muted-foreground">{label}</dt>
-        <dd className="font-medium">{value}</dd>
-      </div>
+    <div>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="mt-1 font-semibold">{value}</dd>
     </div>
   );
 }

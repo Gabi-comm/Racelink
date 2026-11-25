@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useId, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import Link from "next/link";
-import { CheckCircle2, Info, MessageCircle, Plus, X } from "lucide-react";
+import { ArrowRight, CheckCircle2, Info, MessageCircle, Plus, X } from "lucide-react";
 import { Typed, t } from "@/components/landing/demo-kit";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,7 +79,7 @@ function RequestFormRound({
         last.current = Object.fromEntries(CARRY.map((k) => [k, String(data.get(k) ?? "")]));
       }}
       noValidate
-      className="grid gap-8 rounded-xl bg-card p-6 ring-1 ring-border md:p-8"
+      className="relative grid gap-8 rounded-2xl bg-card p-6 shadow-[0_24px_60px_-35px_rgb(23_35_64/0.35)] ring-1 ring-border md:p-8"
     >
       {/* honeypot, hidden from people */}
       <div aria-hidden className="absolute -left-[9999px] h-0 overflow-hidden">
@@ -88,32 +88,42 @@ function RequestFormRound({
         </label>
       </div>
 
-      <Fieldset legend="Your organization">
-        <Field label="Organization" {...field("organization")} autoComplete="organization" className="sm:col-span-2" />
-        <Field label="Contact person" {...field("contactName")} autoComplete="name" />
-        <Field label="Email" type="email" {...field("email")} autoComplete="email" />
-        <Field label="Phone" type="tel" {...field("phone")} autoComplete="tel" optional />
+      <Fieldset num="01" legend="Your organization" note="Who should we speak with?">
+        <Field label="Organization" {...field("organization")} autoComplete="organization" placeholder="Organization name" />
+        <Field label="Contact person" {...field("contactName")} autoComplete="name" placeholder="Full name" />
+        <Field label="Email" type="email" {...field("email")} autoComplete="email" placeholder="you@organization.com" />
+        <Field label="Phone" type="tel" {...field("phone")} autoComplete="tel" optional placeholder="+63 900 000 0000" />
       </Fieldset>
 
-      <Fieldset legend="The race">
-        <Field label="Race name" {...field("raceTitle")} className="sm:col-span-2" />
+      <hr className="border-border" />
+
+      <Fieldset num="02" legend="The race" note="Tell us what you have in mind.">
+        <Field label="Race name" {...field("raceTitle")} placeholder="e.g. Sunday City Run" />
         <Field label="Preferred date" type="date" min={minDate} {...field("proposedDate")} />
-        <Field label="Expected runners" type="number" inputMode="numeric" min={1} {...field("expectedRunners")} optional />
-        <Field label="Location" {...field("location")} className="sm:col-span-2" />
-        <Field label="Distances" {...field("distances")} optional className="sm:col-span-2" />
-        <TextField label="Anything else we should know" {...field("message")} />
+        <Field
+          label="Expected runners"
+          type="number"
+          inputMode="numeric"
+          min={1}
+          {...field("expectedRunners")}
+          optional
+          placeholder="e.g. 500"
+        />
+        <Field label="Location" {...field("location")} placeholder="City or venue" />
+        <Field label="Distances" {...field("distances")} optional placeholder="e.g. 3KM, 5KM, 10KM" />
+        <TextField label="Anything else?"{...field("message")} placeholder="Notes, goals or special requirements" />
       </Fieldset>
+
+      <hr className="border-border" />
 
       {state.error && (
         <p role="alert" className="text-sm font-medium text-destructive">
           {state.error}
         </p>
       )}
-      <div className="flex flex-wrap items-center gap-4">
-        <Button type="submit" size="lg" disabled={pending} className="h-11 px-6 text-base">
-          {pending ? "Sending…" : "Send request"}
-        </Button>
-      </div>
+      <Button type="submit" size="lg" disabled={pending} className="h-12 w-full gap-2 text-base">
+        {pending ? "Sending…" : "Send request"} {!pending && <ArrowRight className="size-4" aria-hidden />}
+      </Button>
     </form>
   );
 }
@@ -173,7 +183,7 @@ function FieldLabel({ id, name, label, optional }: { id: string; name: RaceReque
         }}
         aria-expanded={open}
         aria-controls={`${id}-guide`}
-        className="inline-flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:text-primary"
+        className="inline-flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-link focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:text-link"
       >
         <Info className="size-4" aria-hidden />
         <span className="sr-only">How to fill in {label}</span>
@@ -230,11 +240,18 @@ function FieldLabel({ id, name, label, optional }: { id: string; name: RaceReque
   );
 }
 
-function Fieldset({ legend, children }: { legend: string; children: ReactNode }) {
+function Fieldset({ num, legend, note, children }: { num: string; legend: string; note: string; children: ReactNode }) {
   return (
-    <fieldset className="grid gap-4">
-      <legend className="mb-4 font-display text-lg font-bold">{legend}</legend>
-      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+    <fieldset className="grid gap-6 md:grid-cols-[3rem_11rem_1fr] md:gap-x-4">
+      <legend className="sr-only">{legend}</legend>
+      <span aria-hidden className="font-[family-name:var(--font-oswald)] text-lg font-bold text-brand-light">
+        {num}
+      </span>
+      <div aria-hidden className="-mt-5 md:mt-0">
+        <p className="font-[family-name:var(--font-oswald)] text-2xl leading-tight font-bold uppercase">{legend}</p>
+        <p className="mt-1.5 text-sm text-muted-foreground">{note}</p>
+      </div>
+      <div className="grid content-start gap-4 sm:grid-cols-2">{children}</div>
     </fieldset>
   );
 }
@@ -300,20 +317,21 @@ function Field({
   );
 }
 
-function TextField({ label, name, error, hint, defaultValue }: FieldProps) {
+function TextField({ label, name, error, hint, defaultValue, placeholder }: FieldProps & { placeholder?: string }) {
   const { id, describedBy } = useDescribed(name, error, hint);
   return (
-    <div className="grid gap-1.5 sm:col-span-2">
+    <div className="grid content-start gap-1.5">
       <FieldLabel id={id} name={name} label={label} optional />
       <Textarea
         id={id}
         name={name}
-        rows={4}
+        rows={1}
+        placeholder={placeholder}
         defaultValue={defaultValue}
         key={defaultValue ?? ""}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
-        className="min-h-28"
+        className="min-h-10 py-2"
       />
       <Help id={id} error={error} hint={hint} />
     </div>

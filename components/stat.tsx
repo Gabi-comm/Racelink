@@ -20,16 +20,19 @@ export function Stat({
   href?: string;
   className?: string;
 }) {
+  // 4 -> 04, gaya ng scoreboard
+  const shown = typeof value === "number" && value >= 0 && value < 10 ? String(value).padStart(2, "0") : value;
   return (
     <div
       className={cn(
-        "relative rounded-lg bg-card p-4 ring-1 ring-border",
-        attention && "shadow-[inset_3px_0_0_var(--primary)]",
-        href && "transition-colors has-[a:hover]:ring-primary/60 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring",
+        "relative overflow-hidden rounded-xl bg-card p-5 pb-6 ring-1 ring-border",
+        "after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:bg-brand-light/50",
+        attention && "after:bg-marking",
+        href && "transition-colors has-[a:hover]:ring-link/60 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring",
         className,
       )}
     >
-      <dt className="text-sm text-muted-foreground">
+      <dt className="text-xs font-semibold text-muted-foreground">
         {href ? (
           <Link href={href} className="outline-none after:absolute after:inset-0 after:content-['']">
             {label}
@@ -38,20 +41,43 @@ export function Stat({
           label
         )}
       </dt>
-      <dd className="mt-1 font-display text-3xl font-extrabold tracking-tight tabular-nums">
-        {value}
+      <dd className="mt-4 font-[family-name:var(--font-oswald)] text-4xl font-bold tracking-tight tabular-nums">
+        {shown}
         {suffix && <span className="ml-1 text-base font-bold text-muted-foreground">{suffix}</span>}
       </dd>
-      {detail && <dd className="mt-0.5 text-xs text-muted-foreground">{detail}</dd>}
+      {detail && <dd className={cn("mt-2 text-xs text-muted-foreground", attention && "font-medium text-link")}>{detail}</dd>}
     </div>
   );
 }
 
-export function PageHeader({ title, description, actions }: { title: string; description?: ReactNode; actions?: ReactNode }) {
+// table card: tinted header row, small caps labels, roomier rows
+export const TABLE_SHELL =
+  "overflow-x-auto rounded-2xl bg-card ring-1 ring-border [&_tbody_td]:py-4 [&_thead]:bg-muted/60 [&_thead_th]:h-12 [&_thead_th]:text-[0.7rem] [&_thead_th]:font-bold [&_thead_th]:tracking-[0.12em] [&_thead_th]:text-muted-foreground [&_thead_th]:uppercase";
+
+export function PageHeader({
+  title,
+  description,
+  actions,
+  eyebrow,
+}: {
+  title: string;
+  description?: ReactNode;
+  actions?: ReactNode;
+  eyebrow?: string;
+}) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="font-display text-3xl font-bold tracking-tight">{title}</h1>
+        {eyebrow ? (
+          <>
+            <p className="text-xs font-semibold tracking-[0.2em] text-link uppercase">{eyebrow}</p>
+            <h1 className="mt-2 font-[family-name:var(--font-oswald)] text-[clamp(2.5rem,5vw,3.75rem)] leading-none font-bold tracking-tight uppercase">
+              {title}
+            </h1>
+          </>
+        ) : (
+          <h1 className="font-display text-3xl font-bold tracking-tight">{title}</h1>
+        )}
         {description && <p className="mt-1 max-w-2xl text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}

@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import Link from "next/link";
 import { ArrowRight, Plus } from "lucide-react";
 import { FeesByMonthChart, RaceFillChart, RankedBars, WeeklyRegistrationsChart } from "@/components/charts/organizer-charts";
@@ -16,10 +17,18 @@ export default function OrganizerDashboardPage() {
   return (
     <div className="grid gap-6">
       <PageHeader
-        title="Dashboard"
-        description="How the races are filling up, what needs review, and the fees confirmed so far."
+        eyebrow="Organizer dashboard"
+        title="Race control."
+        description={
+          <>
+            <Suspense fallback="Today">
+              <Today />
+            </Suspense>{" "}
+            · Here&apos;s what needs your attention.
+          </>
+        }
         actions={
-          <Link href="/organizer/events/new" className={buttonVariants({ size: "lg", className: "h-10 px-4" })}>
+          <Link href="/organizer/events/new" className={buttonVariants({ size: "lg", className: "h-12 px-6 text-base" })}>
             <Plus aria-hidden /> New race
           </Link>
         }
@@ -31,6 +40,12 @@ export default function OrganizerDashboardPage() {
   );
 }
 
+// petsa ngayon sa Manila, e.g. "Sunday, August 17"
+async function Today() {
+  await connection();
+  return new Intl.DateTimeFormat("en-PH", { weekday: "long", month: "long", day: "numeric", timeZone: "Asia/Manila" }).format(new Date());
+}
+
 async function Dashboard() {
   const user = await requireUser("organizer");
   const data = await getOrganizerAnalytics(user);
@@ -38,7 +53,7 @@ async function Dashboard() {
 
   return (
     <>
-      <dl className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <dl className="stagger grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
         <Stat
           label="Payments to review"
           value={kpis.pending}
@@ -55,7 +70,7 @@ async function Dashboard() {
           attention={kpis.pendingRequests > 0}
           href="/organizer/requests"
         />
-        <Stat label="Open for registration" value={kpis.racesOpen} detail={`${kpis.racesUpcoming} upcoming in total`} href="/organizer/events" />
+        <Stat label="Open registration"value={kpis.racesOpen} detail={`${kpis.racesUpcoming} upcoming in total`} href="/organizer/events" />
         <Stat label="Finished races" value={kpis.racesFinished} href="/organizer/events?tab=previous" />
         <Stat label="Rejected payments" value={kpis.rejected} detail="Runners can send a new receipt" href="/organizer/participants?status=rejected" />
       </dl>
@@ -105,7 +120,7 @@ function UpcomingRaces({ races }: { races: OrganizerAnalytics["upcoming"] }) {
       title="Upcoming races"
       description="Confirmed and waiting runners per race"
       action={
-        <Link href="/organizer/events" className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
+        <Link href="/organizer/events" className="inline-flex items-center gap-1 text-sm font-semibold text-link hover:underline">
           Manage events <ArrowRight className="size-3.5" aria-hidden />
         </Link>
       }
@@ -140,7 +155,7 @@ function UpcomingRaces({ races }: { races: OrganizerAnalytics["upcoming"] }) {
                   <td className="px-5 py-2.5 text-right tabular-nums">{r.confirmed}</td>
                   <td className="px-5 py-2.5 text-right tabular-nums">
                     {r.pending > 0 ? (
-                      <Link href={`/organizer/participants?event=${r.id}&status=pending`} className="font-semibold text-primary hover:underline">
+                      <Link href={`/organizer/participants?event=${r.id}&status=pending`} className="font-semibold text-link hover:underline">
                         {r.pending}
                       </Link>
                     ) : (
@@ -167,9 +182,9 @@ function NoData() {
 function DashboardSkeleton() {
   return (
     <div className="grid gap-4" aria-hidden>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {Array.from({ length: 8 }, (_, i) => (
-          <div key={i} className="h-24 rounded-lg bg-card ring-1 ring-border" />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+        {Array.from({ length: 7 }, (_, i) => (
+          <div key={i} className="h-36 rounded-xl bg-card ring-1 ring-border" />
         ))}
       </div>
       <div className="stagger grid gap-4 lg:grid-cols-2">

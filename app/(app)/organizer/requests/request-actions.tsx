@@ -50,9 +50,9 @@ export function RequestActions({ id, organization, raceTitle }: { id: number; or
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="grid grid-cols-2 gap-3">
       <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
-        <Button disabled={pending} onClick={() => setApproveOpen(true)}>
+        <Button disabled={pending} className="h-12 text-base" onClick={() => setApproveOpen(true)}>
           <Check aria-hidden /> Approve
         </Button>
         <DialogContent>
@@ -73,7 +73,12 @@ export function RequestActions({ id, organization, raceTitle }: { id: number; or
       </Dialog>
 
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
-        <Button variant="destructive" disabled={pending} onClick={() => setRejectOpen(true)}>
+        <Button
+          variant="outline"
+          disabled={pending}
+          className="h-12 border-destructive/25 bg-destructive/10 text-base text-destructive hover:bg-destructive/15 hover:text-destructive"
+          onClick={() => setRejectOpen(true)}
+        >
           <X aria-hidden /> Reject
         </Button>
         <DialogContent>

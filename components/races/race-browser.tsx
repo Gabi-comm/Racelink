@@ -3,11 +3,12 @@
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ArrowRight, ArrowUpRight, CalendarClock, CalendarDays, Clock, FileText, MapPin, Search, Shirt, Users, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarClock, CalendarDays, Clock, FileText, ImageIcon, MapPin, Search, Shirt, Users, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { RaceCard } from "./race-card";
 import {
   availability,
   dateParts,
@@ -75,26 +76,24 @@ export function RaceBrowser({ events, initialEventId, signedIn }: Props) {
 
   return (
     <>
-      <div className="mt-10 flex flex-col gap-4 rounded-lg bg-card p-4 ring-1 ring-border md:flex-row md:items-end">
-        <label className="grid flex-1 gap-1.5 text-sm font-medium">
-          Search
-          <span className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Race name or city"
-              className="h-10 pl-9"
-            />
-          </span>
+      <div className="mt-8 flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-border lg:flex-row lg:items-center">
+        <label className="relative lg:w-80">
+          <span className="sr-only">Search</span>
+          <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Race name or city"
+            className="h-12 rounded-xl pl-11 text-base md:text-sm"
+          />
         </label>
-        <label className="grid gap-1.5 text-sm font-medium md:w-52">
-          Month
+        <label className="lg:w-52">
+          <span className="sr-only">Month</span>
           <select
             value={month}
             onChange={(e) => setMonth(e.target.value)}
-            className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="h-12 w-full rounded-xl border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <option value="">Any month</option>
             {months.map((m) => (
@@ -104,23 +103,23 @@ export function RaceBrowser({ events, initialEventId, signedIn }: Props) {
             ))}
           </select>
         </label>
-        <fieldset className="grid gap-1.5">
-          <legend className="mb-1.5 text-sm font-medium">Distance</legend>
-          <div className="flex flex-wrap gap-1.5">
-            {distances.map((d) => (
+        <fieldset className="lg:ml-auto">
+          <legend className="sr-only">Distance</legend>
+          <div className="flex flex-wrap gap-2">
+            {["", ...distances].map((d) => (
               <button
-                key={d}
+                key={d || "all"}
                 type="button"
                 aria-pressed={distance === d}
-                onClick={() => setDistance(distance === d ? "" : d)}
+                onClick={() => setDistance(d)}
                 className={cn(
-                  "h-10 rounded-lg border px-3 font-display text-base font-bold transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                  "h-12 min-w-14 rounded-xl border px-4 text-sm font-bold uppercase transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                   distance === d
-                    ? "border-primary bg-primary text-primary-foreground"
+                    ? "border-brand-deep bg-brand-deep text-white [html.dark_&]:border-primary [html.dark_&]:bg-primary [html.dark_&]:text-primary-foreground"
                     : "border-input bg-background hover:bg-muted",
                 )}
               >
-                {d}
+                {d || "All"}
               </button>
             ))}
           </div>
@@ -130,7 +129,7 @@ export function RaceBrowser({ events, initialEventId, signedIn }: Props) {
       <p className="mt-6 text-sm text-muted-foreground" aria-live="polite">
         {filtering ? `${shown.length} of ${events.length} races match` : `${events.length} races`}
         {filtering && (
-          <button type="button" onClick={clearFilters} className="ml-3 font-medium text-primary underline-offset-4 hover:underline">
+          <button type="button" onClick={clearFilters} className="ml-3 font-medium text-link underline-offset-4 hover:underline">
             Clear filters
           </button>
         )}
@@ -145,9 +144,11 @@ export function RaceBrowser({ events, initialEventId, signedIn }: Props) {
           </Button>
         </div>
       ) : (
-        <ol className="mt-4 divide-y overflow-hidden rounded-lg bg-card ring-1 ring-border">
-          {shown.map((e) => (
-            <RaceRow key={e.id} event={e} onOpen={() => openRace(e.id)} />
+        <ol className="mt-4 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {shown.map((e, i) => (
+            <li key={e.id}>
+              <RaceCardItem event={e} n={i} soonest={e.id === events[0].id} signedIn={signedIn} onOpen={() => openRace(e.id)} />
+            </li>
           ))}
         </ol>
       )}
@@ -159,49 +160,35 @@ export function RaceBrowser({ events, initialEventId, signedIn }: Props) {
   );
 }
 
-function RaceRow({ event, onOpen }: { event: PublicEvent; onOpen: () => void }) {
-  const { day, month, weekday } = dateParts(event.eventDate);
+function RaceCardItem({ event, n, soonest, signedIn, onOpen }: { event: PublicEvent; n: number; soonest: boolean; signedIn: boolean; onOpen: () => void }) {
   const avail = availability(event);
-  const from = priceFrom(event);
+  const fewLeft = avail.open && avail.slotsLeft !== null && event.capacity !== null && avail.slotsLeft <= Math.max(10, event.capacity * 0.1);
+  const badge = !avail.open ? avail.reason : fewLeft ? `${avail.slotsLeft} slots left` : soonest ? "Next race" : undefined;
+  const register = `/register/${event.id}`;
 
   return (
-    <li className="grid grid-cols-[4.5rem_1fr] gap-x-5 gap-y-4 p-5 md:grid-cols-[5.5rem_1fr_auto] md:items-center md:gap-x-8 md:p-6">
-      <div className="row-span-2 flex flex-col items-center rounded-md border py-2 text-center md:row-span-1">
-        <span className="text-sm font-semibold text-primary">{month}</span>
-        <span className="font-display text-3xl leading-none font-extrabold tabular-nums">{day}</span>
-        <span className="text-xs text-muted-foreground">{weekday}</span>
-      </div>
-
-      <div className="min-w-0">
-        <h3 className="font-display text-2xl leading-tight font-bold">{event.title}</h3>
-        <p className="mt-1 flex items-center gap-1.5 text-muted-foreground">
-          <MapPin className="size-4 shrink-0" aria-hidden />
-          {event.location}
-        </p>
-        <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="Distances">
-          {event.distances.map((d) => (
-            <li key={d.id} className="rounded-md bg-muted px-2 py-0.5 font-display text-sm font-bold">
-              {d.label}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="col-start-2 flex flex-wrap items-center justify-between gap-3 md:col-start-3 md:flex-col md:items-end md:gap-2">
-        <div className="md:text-right">
-          {from !== null && (
-            <p className="font-semibold">
-              <span className="font-normal text-muted-foreground">From </span>
-              {formatPeso(from)}
-            </p>
+    <RaceCard
+      race={{ ...event, distances: event.distances.map((d) => d.label), priceFrom: priceFrom(event) }}
+      n={n}
+      badge={badge}
+      actions={
+        <>
+          <button type="button" onClick={onOpen} className="text-sm font-semibold text-link outline-none hover:underline focus-visible:underline">
+            Details
+          </button>
+          {avail.open ? (
+            <Link
+              href={signedIn ? register : `/login?next=${encodeURIComponent(register)}`}
+              className={buttonVariants({ className: "h-11 gap-2 px-4 text-base" })}
+            >
+              Register <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          ) : (
+            <span className="text-sm font-semibold text-destructive">{avail.reason}</span>
           )}
-          <AvailabilityText event={event} />
-        </div>
-        <Button size="lg" variant={avail.open ? "default" : "outline"} onClick={onOpen}>
-          View details
-        </Button>
-      </div>
-    </li>
+        </>
+      }
+    />
   );
 }
 
@@ -246,8 +233,8 @@ function RaceDetails({ event, signedIn }: { event: PublicEvent; signedIn: boolea
         </DialogClose>
 
         <div className="relative flex items-end gap-4 px-5 pt-14 pb-5 sm:px-6">
-          <div className="flex w-16 shrink-0 flex-col items-center rounded-lg bg-white py-2 text-center text-[#221a1a] shadow-lg">
-            <span className="text-xs font-bold text-[#d40000] uppercase">{month}</span>
+          <div className="flex w-16 shrink-0 flex-col items-center rounded-lg bg-white py-2 text-center text-[#172340] shadow-lg">
+            <span className="text-xs font-bold text-[#4757b8] uppercase">{month}</span>
             <span className="font-display text-3xl leading-none font-extrabold tabular-nums">{day}</span>
             <span className="text-[11px] text-[#6b5b58]">{weekday}</span>
           </div>
@@ -292,7 +279,7 @@ function RaceDetails({ event, signedIn }: { event: PublicEvent; signedIn: boolea
             {event.distances.map((d) => (
               <li key={d.id} className="rounded-lg border bg-background px-4 py-3">
                 <p className="font-display text-xl leading-none font-extrabold">{d.label}</p>
-                <p className="mt-1.5 text-sm font-semibold text-primary tabular-nums">{formatPeso(d.price)}</p>
+                <p className="mt-1.5 text-sm font-semibold text-link tabular-nums">{formatPeso(d.price)}</p>
               </li>
             ))}
           </ul>
@@ -307,19 +294,48 @@ function RaceDetails({ event, signedIn }: { event: PublicEvent; signedIn: boolea
           </section>
         )}
 
-        {event.documents.length > 0 && (
+        {event.documents.some((d) => d.image) && (
+          <section>
+            <h3 className="flex items-center gap-2 text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+              <ImageIcon className="size-4" aria-hidden /> Poster and size chart
+            </h3>
+            <ul className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {event.documents
+                .filter((d) => d.image)
+                .map((d) => (
+                  <li key={d.id}>
+                    <a
+                      href={`/api/events/${event.id}/documents/${d.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group grid gap-1.5"
+                      aria-label={`Open ${d.title} in a new tab`}
+                    >
+                      <span className="block aspect-[3/4] overflow-hidden rounded-md bg-muted ring-1 ring-border transition-shadow group-hover:ring-foreground/30">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={`/api/events/${event.id}/documents/${d.id}`} alt={d.title} className="size-full object-cover" />
+                      </span>
+                      <span className="truncate text-sm font-medium group-hover:underline">{d.title}</span>
+                    </a>
+                  </li>
+                ))}
+            </ul>
+          </section>
+        )}
+
+        {event.documents.some((d) => !d.image) && (
           <section>
             <h3 className="flex items-center gap-2 text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
               <FileText className="size-4" aria-hidden /> Race files
             </h3>
             <ul className="mt-2 grid gap-1.5">
-              {event.documents.map((d) => (
+              {event.documents.filter((d) => !d.image).map((d) => (
                 <li key={d.id}>
                   <a
                     href={`/api/events/${event.id}/documents/${d.id}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 font-medium text-primary underline-offset-4 hover:underline"
+                    className="inline-flex items-center gap-1.5 font-medium text-link underline-offset-4 hover:underline"
                   >
                     {d.title} <ArrowUpRight className="size-3.5" aria-hidden />
                   </a>
@@ -367,7 +383,7 @@ function Detail({
 }) {
   return (
     <div className="flex gap-2.5 bg-card p-3.5">
-      <Icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+      <Icon className="mt-0.5 size-4 shrink-0 text-link" aria-hidden />
       <div className="min-w-0 flex-1">
         <dt className="text-xs text-muted-foreground">{label}</dt>
         <dd className="mt-0.5 text-sm font-semibold">{value}</dd>

@@ -10,9 +10,9 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 
-// palette: single series = racing red #d40000; the only 2-series chart adds #ff6e6e (validated pair, legend + table view)
+// chart-1 main series, chart-2 second series
 const RED = "var(--chart-1)";
-const RED_LIGHT = "#ff6e6e";
+const RED_LIGHT = "var(--chart-2)";
 
 const peso = (n: number) =>
   new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 }).format(n);

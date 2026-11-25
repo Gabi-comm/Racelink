@@ -1,3 +1,4 @@
+import { ReceiptPreview } from "@/components/receipt-preview";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Form from "next/form";
@@ -81,7 +82,7 @@ async function Registrations({
           </div>
           <p className="mt-1 text-muted-foreground">
             Registrations for {formatDate(event.eventDate)}.{" "}
-            <Link href={`/organizer/events/${event.id}`} className="font-medium text-primary hover:underline">
+            <Link href={`/organizer/events/${event.id}`} className="font-medium text-link hover:underline">
               Edit race details
             </Link>
           </p>
@@ -172,9 +173,7 @@ function Row({ r, refundTab }: { r: Registration; refundTab: boolean }) {
               {r.proof.amount < r.price && <span className="text-destructive"> of {formatPeso(r.price)}</span>}
             </p>
             <p className="text-sm text-muted-foreground">{r.proof.referenceNo ? `Ref ${r.proof.referenceNo}` : "No reference"}</p>
-            <a href={`/api/receipts/${r.proof.id}`} target="_blank" rel="noreferrer" className="text-sm font-medium text-primary hover:underline">
-              View receipt
-            </a>
+            <ReceiptPreview receiptId={r.proof.id} className="text-sm font-medium text-link hover:underline" />
           </>
         ) : (
           <p className="text-sm text-muted-foreground">No receipt</p>

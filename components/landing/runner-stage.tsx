@@ -132,8 +132,8 @@ export function RunnerStage() {
 
     const canBlur = "filter" in octx;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let ink = "#221a1a";
-    let red = "#d40000";
+    let ink = "#172340";
+    let red = "#4757b8";
     let size = 0;
     let raf = 0;
     let visible = true;
@@ -141,7 +141,7 @@ export function RunnerStage() {
     const readColors = () => {
       const css = getComputedStyle(document.documentElement);
       ink = css.getPropertyValue("--foreground").trim() || ink;
-      red = css.getPropertyValue("--primary").trim() || red;
+      red = css.getPropertyValue("--link").trim() || red;
     };
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);

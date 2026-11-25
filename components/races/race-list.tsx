@@ -16,9 +16,9 @@ export async function Races({ eventsPromise, searchParams }: RacesProps) {
 
 export function RaceListSkeleton() {
   return (
-    <div className="mt-10 grid gap-3" aria-hidden>
+    <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3" aria-hidden>
       {[0, 1, 2].map((i) => (
-        <div key={i} className="h-32 rounded-lg bg-card ring-1 ring-border" />
+        <div key={i} className="h-96 rounded-2xl bg-card ring-1 ring-border" />
       ))}
     </div>
   );

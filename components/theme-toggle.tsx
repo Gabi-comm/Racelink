@@ -44,13 +44,13 @@ export function ThemeToggle({ className }: { className?: string }) {
       type="button"
       onClick={toggle}
       className={cn(
-        "inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50",
+        "inline-flex size-10 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50",
         className,
       )}
     >
-      {/* icons swap via the .dark class, so server and client render the same markup */}
-      <Moon className="size-[1.15rem] dark:hidden" aria-hidden />
-      <Sun className="hidden size-[1.15rem] dark:block" aria-hidden />
+      {/* swap by the page theme (html.dark), not dark: — the navy header is always .dark */}
+      <Moon className="size-[1.15rem] [html.dark_&]:hidden" aria-hidden />
+      <Sun className="hidden size-[1.15rem] [html.dark_&]:block" aria-hidden />
       <span className="sr-only">Switch between light and dark mode</span>
     </button>
   );

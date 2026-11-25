@@ -9,9 +9,9 @@ export const UPLOAD_KINDS = {
   },
   document: {
     prefix: "documents",
-    types: { "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png" },
+    types: { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "application/pdf": "pdf" },
     maxBytes: 10 * 1024 * 1024,
-    label: "PDF, JPG or PNG, up to 10 MB",
+    label: "JPG, PNG, WebP or PDF, up to 10 MB",
   },
   receipt: {
     prefix: "payments",
@@ -22,6 +22,13 @@ export const UPLOAD_KINDS = {
 } as const;
 
 export type UploadKind = keyof typeof UPLOAD_KINDS;
+
+// posters, shirt size charts and other race files, per race
+export const MAX_EVENT_FILES = 5;
+
+export function isImageKey(key: string) {
+  return /\.(jpe?g|png|webp)$/i.test(key);
+}
 
 export function checkFile(kind: UploadKind, type: string, size: number): string | null {
   const rule = UPLOAD_KINDS[kind];

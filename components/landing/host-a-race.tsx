@@ -12,7 +12,7 @@ export function HostARace() {
       eyebrow="For organizations"
       title={
         <>
-          Host a <span className="text-primary">Race!</span>
+          Host a <span className="text-link">Race!</span>
         </>
       }
       flip
@@ -79,7 +79,7 @@ function ReviewScene() {
       <div className="demo-in mt-3 rounded-lg border bg-background p-3.5" style={t(0.15)}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-xs font-semibold text-primary">UE Caloocan Student Council</p>
+            <p className="truncate text-xs font-semibold text-link">UE Caloocan Student Council</p>
             <p className="truncate text-sm font-bold">UE Warriors Fun Run</p>
             <p className="truncate text-xs text-muted-foreground">Jul 12, 2027 · 500 runners · 3K, 5K</p>
           </div>
@@ -101,7 +101,7 @@ function ReviewScene() {
         </div>
       </div>
       <p className="demo-in mt-4 flex items-center gap-1.5 text-xs font-semibold" style={t(3)}>
-        <PencilLine className="size-4 text-primary" /> Draft race created
+        <PencilLine className="size-4 text-link" /> Draft race created
       </p>
       {/* confirm dialog: pops in, gets clicked, goes away */}
       <div className="demo-out absolute right-5 bottom-5 z-20 w-60" style={t(2.75)}>

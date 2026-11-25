@@ -35,7 +35,7 @@ export function RaceProgress({ status, className }: { status: Status; className?
                 failed && "text-destructive",
               )}
             >
-              {done && <Check className="size-3 shrink-0 text-primary" aria-hidden />}
+              {done && <Check className="size-3 shrink-0 text-link" aria-hidden />}
               {failed && <X className="size-3 shrink-0" aria-hidden />}
               {failed ? "Payment rejected" : label}
               <span className="sr-only">{done ? " (done)" : current ? " (in progress)" : failed ? "" : " (not yet)"}</span>

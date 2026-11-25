@@ -9,7 +9,11 @@ export const metadata: Metadata = { title: "Races" };
 export default function RacesPage({ searchParams }: PageProps<"/races">) {
   return (
     <div className="grid gap-2">
-      <h1 className="font-display text-3xl font-bold tracking-tight">Find a race</h1>
+      <div>
+        <p className="text-xs font-semibold tracking-[0.2em] text-link uppercase">Explore events</p>
+        <h1 className="mt-2 font-[family-name:var(--font-oswald)] text-5xl font-bold uppercase md:text-6xl">Find a race</h1>
+        <p className="mt-2 text-muted-foreground">Metro Manila&apos;s next start line is waiting.</p>
+      </div>
       <Suspense fallback={<RaceListSkeleton />}>
         <SignedInRaces searchParams={searchParams} />
       </Suspense>

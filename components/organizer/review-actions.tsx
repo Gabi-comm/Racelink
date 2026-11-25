@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ReceiptPreview } from "@/components/receipt-preview";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusMark } from "@/components/status-badge";
@@ -59,12 +60,18 @@ export function ReviewButtons({ bookingId, runnerName }: { bookingId: number; ru
   }
 
   return (
-    <div className="flex justify-end gap-1">
-      <Button size="sm" disabled={pending} onClick={() => run(() => approveBooking(bookingId))}>
+    <div className="flex justify-end gap-2">
+      <Button size="sm" disabled={pending} className="h-9 px-3.5" onClick={() => run(() => approveBooking(bookingId))}>
         <Check aria-hidden /> Approve
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <Button size="sm" variant="outline" disabled={pending} onClick={() => setOpen(true)}>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={pending}
+          className="h-9 border-destructive/25 bg-destructive/10 px-3.5 text-destructive hover:bg-destructive/15 hover:text-destructive"
+          onClick={() => setOpen(true)}
+        >
           <X aria-hidden /> Reject
         </Button>
         <DialogContent>
@@ -104,7 +111,7 @@ export function UndoConfirmButton({ bookingId, runnerName, bib }: { bookingId: n
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button size="sm" variant="outline" disabled={pending} onClick={() => setOpen(true)}>
+      <Button size="sm" variant="outline" disabled={pending} className="h-9 px-3.5" onClick={() => setOpen(true)}>
         <Undo2 aria-hidden /> Undo confirm
       </Button>
       <DialogContent>
@@ -236,9 +243,7 @@ export function RefundStatus({ refund, runnerName, receiptId }: { refund: Refund
               <dt className="text-xs font-medium text-muted-foreground">Receipt</dt>
               <dd className="mt-1">
                 {receiptId ? (
-                  <a href={`/api/receipts/${receiptId}`} target="_blank" rel="noreferrer" className="font-medium text-primary hover:underline">
-                    View receipt
-                  </a>
+                  <ReceiptPreview receiptId={receiptId} className="font-medium text-link hover:underline" />
                 ) : (
                   <span className="text-muted-foreground">No receipt</span>
                 )}

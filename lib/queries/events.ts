@@ -1,6 +1,7 @@
 import "server-only";
 import { connection } from "next/server";
 import { and, asc, gte, inArray, sql } from "drizzle-orm";
+import { isImageKey } from "@/lib/uploads";
 import { db } from "@/lib/db";
 import { eventDistances, eventDocuments, events, eventSizes, TSHIRT_SIZES } from "@/lib/db/schema";
 import type { PublicEvent } from "@/lib/events";
@@ -47,7 +48,7 @@ export async function getPublicEvents(): Promise<PublicEvent[]> {
       .from(eventSizes)
       .where(inArray(eventSizes.eventId, ids)),
     db
-      .select({ id: eventDocuments.id, eventId: eventDocuments.eventId, title: eventDocuments.title })
+      .select({ id: eventDocuments.id, eventId: eventDocuments.eventId, title: eventDocuments.title, fileKey: eventDocuments.fileKey })
       .from(eventDocuments)
       .where(inArray(eventDocuments.eventId, ids))
       .orderBy(asc(eventDocuments.createdAt)),
@@ -61,7 +62,7 @@ export async function getPublicEvents(): Promise<PublicEvent[]> {
       .filter((s) => s.eventId === r.id)
       .map((s) => s.size)
       .sort((a, b) => TSHIRT_SIZES.indexOf(a) - TSHIRT_SIZES.indexOf(b)),
-    documents: documents.filter((d) => d.eventId === r.id).map(({ id, title }) => ({ id, title })),
+    documents: documents.filter((d) => d.eventId === r.id).map(({ id, title, fileKey }) => ({ id, title, image: isImageKey(fileKey) })),
   }));
 }
 

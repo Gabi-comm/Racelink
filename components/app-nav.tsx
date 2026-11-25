@@ -40,7 +40,7 @@ export function AppNav({ home, items, badges, user, logo, logout }: Props) {
     const n = item.badgeKey ? badges[item.badgeKey] : 0;
     return n > 0 ? (
       <span
-        className="ml-1.5 text-xs font-bold text-primary tabular-nums"
+        className="ml-2 grid h-5 min-w-5 place-items-center rounded-full bg-foreground px-1.5 text-[0.7rem] font-bold text-background tabular-nums"
         aria-label={`${n} waiting`}
       >
         {n}
@@ -63,7 +63,7 @@ export function AppNav({ home, items, badges, user, logo, logout }: Props) {
             key={item.href}
             href={item.href}
             aria-current={current === item.href ? "page" : undefined}
-            className="flex items-center border-b-2 border-transparent px-3 pt-0.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:border-primary aria-[current=page]:text-foreground"
+            className="flex items-center border-b-2 border-transparent px-3 pt-0.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:border-link aria-[current=page]:text-foreground"
           >
             {item.label}
             {badge(item)}
@@ -80,7 +80,7 @@ export function AppNav({ home, items, badges, user, logo, logout }: Props) {
           >
             <Avatar name={user.name} />
             <span className="text-left leading-tight">
-              <span className="block text-sm font-semibold group-hover:text-primary group-aria-[current=page]:text-primary">
+              <span className="block text-sm font-semibold group-hover:text-link group-aria-[current=page]:text-link">
                 {user.name}
               </span>
               <span className="block text-xs text-muted-foreground">
@@ -89,9 +89,12 @@ export function AppNav({ home, items, badges, user, logo, logout }: Props) {
             </span>
           </Link>
         ) : (
-          <div className="text-right leading-tight">
-            <p className="text-sm font-semibold">{user.name}</p>
-            <p className="text-xs text-muted-foreground">{user.role}</p>
+          <div className="flex items-center gap-2.5">
+            <Avatar name={user.name} />
+            <div className="leading-tight">
+              <p className="text-sm font-semibold">{user.name}</p>
+              <p className="text-xs text-muted-foreground">{user.role}</p>
+            </div>
           </div>
         )}
         <ThemeToggle />
@@ -125,7 +128,7 @@ export function AppNav({ home, items, badges, user, logo, logout }: Props) {
                   onClick={() => setOpen(false)}
                   aria-current={current === item.href ? "page" : undefined}
                   className={cn(
-                    "flex items-center rounded-md px-3 py-2.5 font-medium hover:bg-muted aria-[current=page]:text-primary",
+                    "flex items-center rounded-md px-3 py-2.5 font-medium hover:bg-muted aria-[current=page]:text-link",
                   )}
                 >
                   {item.label}
@@ -145,7 +148,7 @@ export function AppNav({ home, items, badges, user, logo, logout }: Props) {
                 href={user.href}
                 onClick={() => setOpen(false)}
                 aria-current={pathname === user.href ? "page" : undefined}
-                className="flex min-w-0 items-center gap-2.5 rounded-md py-1 pr-2 text-sm hover:text-primary aria-[current=page]:text-primary"
+                className="flex min-w-0 items-center gap-2.5 rounded-md py-1 pr-2 text-sm hover:text-link aria-[current=page]:text-link"
               >
                 <Avatar name={user.name} />
                 <span className="min-w-0 leading-tight">
@@ -185,7 +188,7 @@ function Avatar({ name }: { name: string }) {
   return (
     <span
       aria-hidden
-      className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-deep text-xs font-bold text-white"
+      className="grid size-10 shrink-0 place-items-center rounded-full bg-[#7b8ce0] text-xs font-bold text-white"
     >
       {initials}
     </span>

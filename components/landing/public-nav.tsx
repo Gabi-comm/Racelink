@@ -21,7 +21,7 @@ export function PublicNav({ links }: { links: NavLink[] }) {
             key={l.href}
             href={l.href}
             aria-current={active(l.href) ? "page" : undefined}
-            className="flex h-full items-center border-b-2 border-transparent px-3 pt-0.5 text-[0.95rem] font-medium text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:border-primary aria-[current=page]:text-foreground"
+            className="flex h-full items-center border-b-2 border-transparent px-3 pt-0.5 text-[0.95rem] font-medium text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:border-link aria-[current=page]:text-foreground"
           >
             {l.label}
           </Link>
@@ -49,7 +49,7 @@ export function PublicNav({ links }: { links: NavLink[] }) {
                 href={l.href}
                 onClick={() => setOpen(false)}
                 aria-current={active(l.href) ? "page" : undefined}
-                className="rounded-md px-3 py-2.5 font-medium hover:bg-muted aria-[current=page]:text-primary"
+                className="rounded-md px-3 py-2.5 font-medium hover:bg-muted aria-[current=page]:text-link"
               >
                 {l.label}
               </Link>

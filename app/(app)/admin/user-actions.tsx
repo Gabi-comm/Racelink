@@ -41,7 +41,7 @@ export function RoleSelect({ userId, name, role }: { userId: string; name: strin
       value={value}
       disabled={pending}
       onChange={(e) => onChange(e.target.value)}
-      className="h-8 rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
+      className="h-10 w-36 rounded-lg border border-input bg-card px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
     >
       {ROLES.map((r) => (
         <option key={r} value={r}>
@@ -76,7 +76,7 @@ export function BanButton({ userId, name, banned }: { userId: string; name: stri
 
   if (banned) {
     return (
-      <Button size="sm" variant="outline" disabled={pending} onClick={() => run(() => unbanUser(userId))}>
+      <Button size="sm" variant="outline" disabled={pending} className="h-9 px-3.5" onClick={() => run(() => unbanUser(userId))}>
         Unban
       </Button>
     );
@@ -84,7 +84,12 @@ export function BanButton({ userId, name, banned }: { userId: string; name: stri
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setOpen(true)}>
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-9 border-destructive/25 bg-destructive/10 px-3.5 text-destructive hover:bg-destructive/15 hover:text-destructive"
+        onClick={() => setOpen(true)}
+      >
         Ban
       </Button>
       <DialogContent>

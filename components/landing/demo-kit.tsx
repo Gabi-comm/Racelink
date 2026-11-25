@@ -108,7 +108,7 @@ export function DemoPlayer({ id, eyebrow, title, steps, action, flip, className 
       <div className="mx-auto max-w-6xl px-4 py-20">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold tracking-[0.35em] text-primary uppercase">{eyebrow}</p>
+            <p className="text-xs font-semibold tracking-[0.35em] text-link uppercase">{eyebrow}</p>
             <h2 id={`${id}-title`} className="mt-3 font-display text-3xl font-bold tracking-tight md:text-4xl">
               {title}
             </h2>
@@ -138,7 +138,7 @@ export function DemoPlayer({ id, eyebrow, title, steps, action, flip, className 
                     )}
                   >
                     <span className="flex items-baseline gap-3">
-                      <span className={cn("text-xs font-bold tabular-nums", active ? "text-primary" : "text-muted-foreground")}>0{i + 1}</span>
+                      <span className={cn("text-xs font-bold tabular-nums", active ? "text-link" : "text-muted-foreground")}>0{i + 1}</span>
                       <span className={cn("font-display text-base font-bold", !active && "text-muted-foreground")}>{s.title}</span>
                     </span>
                     {active && <span className="mt-1 block pl-7 text-sm leading-relaxed text-muted-foreground">{s.body}</span>}

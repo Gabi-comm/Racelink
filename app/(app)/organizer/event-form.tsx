@@ -267,7 +267,7 @@ export function EventForm({ event, bannerUrl }: { event?: EventFormValues; banne
             {TSHIRT_SIZES.map((s) => (
               <label
                 key={s}
-                className="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 font-display text-base font-bold has-checked:border-primary has-checked:bg-primary/10 has-focus-visible:ring-3 has-focus-visible:ring-ring/50"
+                className="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 font-display text-base font-bold has-checked:border-link has-checked:bg-primary/10 has-focus-visible:ring-3 has-focus-visible:ring-ring/50"
               >
                 <input
                   type="checkbox"
@@ -293,7 +293,7 @@ export function EventForm({ event, bannerUrl }: { event?: EventFormValues; banne
           {EVENT_STATUSES.map((s) => (
             <label
               key={s}
-              className="flex cursor-pointer gap-3 rounded-lg border border-input bg-background p-3 has-checked:border-primary has-checked:bg-primary/5 has-focus-visible:ring-3 has-focus-visible:ring-ring/50"
+              className="flex cursor-pointer gap-3 rounded-lg border border-input bg-background p-3 has-checked:border-link has-checked:bg-primary/5 has-focus-visible:ring-3 has-focus-visible:ring-ring/50"
             >
               <input
                 type="radio"
@@ -342,7 +342,7 @@ function PaymentFields({ event, err }: { event?: EventFormValues; err: Record<st
           {PAYMENT_METHODS.map((m) => (
             <label
               key={m}
-              className="flex cursor-pointer items-center gap-3 rounded-lg border border-input bg-background p-3 has-checked:border-primary has-checked:bg-primary/5 has-focus-visible:ring-3 has-focus-visible:ring-ring/50"
+              className="flex cursor-pointer items-center gap-3 rounded-lg border border-input bg-background p-3 has-checked:border-link has-checked:bg-primary/5 has-focus-visible:ring-3 has-focus-visible:ring-ring/50"
             >
               <input
                 type="radio"

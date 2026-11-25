@@ -35,6 +35,8 @@ export async function getRunnerDashboard(userId: string) {
         location: events.location,
         eventDate: events.eventDate,
         priceFrom: sql<number>`(SELECT MIN(d.price) FROM event_distances AS d WHERE d.event_id = ${events}.id)`.mapWith(Number),
+        hasBanner: sql<number>`${events.bannerKey} IS NOT NULL`.mapWith(Boolean),
+        distances: sql<string | null>`(SELECT GROUP_CONCAT(d.label ORDER BY d.price SEPARATOR '|') FROM event_distances AS d WHERE d.event_id = ${events}.id)`,
       })
       .from(events)
       .where(
@@ -53,6 +55,6 @@ export async function getRunnerDashboard(userId: string) {
     next: upcoming.find((b) => b.status !== "rejected" && b.eventStatus !== "cancelled") ?? null,
     needsAction: upcoming.filter((b) => b.status === "rejected" && b.eventStatus !== "cancelled"),
     profileComplete: !!(profile?.phone && profile.emergencyName),
-    openRaces,
+    openRaces: openRaces.map((r) => ({ ...r, distances: r.distances ? r.distances.split("|") : [] })),
   };
 }

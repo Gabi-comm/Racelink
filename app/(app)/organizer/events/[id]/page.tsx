@@ -10,6 +10,7 @@ import { requireUser } from "@/lib/session";
 import { fileUrl } from "@/lib/storage";
 import { DeleteEventButton } from "../../delete-event-button";
 import { EventForm } from "../../event-form";
+import { isImageKey } from "@/lib/uploads";
 import { DocumentsPanel } from "./documents-panel";
 
 export const metadata: Metadata = { title: "Edit race" };
@@ -38,7 +39,7 @@ async function Editor({ params, searchParams }: Pick<PageProps<"/organizer/event
 
   const [bannerUrl, documents] = await Promise.all([
     event.bannerKey ? fileUrl(event.bannerKey) : null,
-    Promise.all(event.documents.map(async (d) => ({ id: d.id, title: d.title, url: await fileUrl(d.fileKey, d.title) }))),
+    Promise.all(event.documents.map(async (d) => ({ id: d.id, title: d.title, image: isImageKey(d.fileKey), url: await fileUrl(d.fileKey, d.title) }))),
   ]);
   const notice = query.fromRequest
     ? "Request approved. This draft race was made from it. Fill in the fees, distances and payment details, then open registration."
@@ -67,7 +68,7 @@ async function Editor({ params, searchParams }: Pick<PageProps<"/organizer/event
             Registrations
           </Link>
           {(event.status === "open" || event.status === "closed") && (
-            <Link href={`/races?event=${event.id}`} className="inline-flex items-center gap-1.5 px-2 text-sm font-medium text-primary hover:underline">
+            <Link href={`/races?event=${event.id}`} className="inline-flex items-center gap-1.5 px-2 text-sm font-medium text-link hover:underline">
               View as runner <ExternalLink className="size-3.5" aria-hidden />
             </Link>
           )}

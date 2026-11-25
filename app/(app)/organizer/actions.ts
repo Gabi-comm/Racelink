@@ -10,7 +10,7 @@ import { eventSchema, flattenErrors, readEventForm, type EventFormState } from "
 import { canManageEvents } from "@/lib/roles";
 import { getCurrentUser, type CurrentUser } from "@/lib/session";
 import { deleteFile } from "@/lib/storage";
-import { ownsKey } from "@/lib/uploads";
+import { MAX_EVENT_FILES, ownsKey } from "@/lib/uploads";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -142,7 +142,7 @@ export async function deleteEvent(id: number): Promise<Result> {
 }
 
 const documentSchema = z.object({
-  title: z.string().trim().min(2, "Give the file a name, like Race map.").max(150),
+  title: z.string().trim().min(2, "Give the file a name, like Race poster.").max(150),
   key: z.string(),
 });
 
@@ -155,7 +155,18 @@ export async function addDocument(eventId: number, input: { title: string; key: 
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
   if (!ownsKey("document", user.id, parsed.data.key)) return { ok: false, error: "Upload the file again." };
 
-  await db.insert(eventDocuments).values({ eventId, title: parsed.data.title, fileKey: parsed.data.key, uploadedBy: user.id });
+  // lock the race row so two uploads at once can't go past the limit
+  const added = await db.transaction(async (tx) => {
+    await tx.select({ id: events.id }).from(events).where(eq(events.id, eventId)).for("update");
+    const [{ n }] = await tx.select({ n: count() }).from(eventDocuments).where(eq(eventDocuments.eventId, eventId));
+    if (n >= MAX_EVENT_FILES) return false;
+    await tx.insert(eventDocuments).values({ eventId, title: parsed.data.title, fileKey: parsed.data.key, uploadedBy: user.id });
+    return true;
+  });
+  if (!added) {
+    await deleteFile(parsed.data.key);
+    return { ok: false, error: `A race can have up to ${MAX_EVENT_FILES} files. Remove one to add another.` };
+  }
   refresh(eventId);
   return { ok: true };
 }

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
-import { EmptyState, PageHeader } from "@/components/stat";
+import { EmptyState, PageHeader, TABLE_SHELL } from "@/components/stat";
 import { StatusBadge } from "@/components/status-badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,10 +34,11 @@ export default function ManageEventsPage({ searchParams }: PageProps<"/organizer
   return (
     <div className="grid gap-6">
       <PageHeader
+        eyebrow="Event operations"
         title="Manage events"
-        description="Create races, and keep current, upcoming and past races up to date."
+        description="Create, edit, and monitor every race."
         actions={
-          <Link href="/organizer/events/new" className={buttonVariants({ size: "lg", className: "h-10 px-4" })}>
+          <Link href="/organizer/events/new" className={buttonVariants({ size: "lg", className: "h-12 px-6 text-base" })}>
             <Plus aria-hidden /> New race
           </Link>
         }
@@ -98,10 +99,10 @@ async function Events({ searchParams }: Pick<PageProps<"/organizer/events">, "se
           label="Race timeline"
           items={TABS.map((t) => ({ href: href(t.value), label: t.label, count: rows.filter((r) => tabOf(r, today) === t.value).length, active: tab === t.value }))}
         />
-        <Form action="/organizer/events" className="relative w-full sm:w-72" role="search">
+        <Form action="/organizer/events" className="relative w-full sm:w-80" role="search">
           {tab !== "current" && <input type="hidden" name="tab" value={tab} />}
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <Input name="q" defaultValue={q} placeholder="Race, place or organization" aria-label="Search races" className="h-9 pl-8" />
+          <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Input name="q" defaultValue={q} placeholder="Race, place or organization" aria-label="Search races" className="h-12 rounded-xl pl-10" />
         </Form>
       </div>
       <p className="-mt-2 text-sm text-muted-foreground">{TABS.find((t) => t.value === tab)?.hint}</p>
@@ -112,7 +113,7 @@ async function Events({ searchParams }: Pick<PageProps<"/organizer/events">, "se
           text={inTab.length === 0 ? "Races move between these tabs on their own as their status and date change." : "Try another search."}
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg bg-card ring-1 ring-border">
+        <div className={TABLE_SHELL}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -124,9 +125,7 @@ async function Events({ searchParams }: Pick<PageProps<"/organizer/events">, "se
                 <TableHead className="text-right">To review</TableHead>
                 <TableHead className="text-right">Fees confirmed</TableHead>
                 <TableHead>Created by</TableHead>
-                <TableHead className="pr-4 text-right">
-                  <span className="sr-only">Actions</span>
-                </TableHead>
+                <TableHead className="pr-4">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody key={`${tab}|${q}`} className="stagger">
@@ -149,7 +148,7 @@ async function Events({ searchParams }: Pick<PageProps<"/organizer/events">, "se
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {r.pending > 0 ? (
-                      <Link href={`/organizer/participants?event=${r.id}&status=pending`} className="font-semibold text-primary hover:underline">
+                      <Link href={`/organizer/participants?event=${r.id}&status=pending`} className="font-semibold text-link hover:underline">
                         {r.pending}
                       </Link>
                     ) : (
@@ -161,14 +160,14 @@ async function Events({ searchParams }: Pick<PageProps<"/organizer/events">, "se
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-muted-foreground">{r.organizerName}</TableCell>
                   <TableCell className="pr-4">
-                    <div className="flex justify-end gap-1">
-                      <Link href={`/organizer/participants?event=${r.id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>
+                    <div className="flex items-center gap-3 text-xs font-semibold">
+                      <Link href={`/organizer/participants?event=${r.id}`} className="text-link hover:underline">
                         Participants
                       </Link>
-                      <Link href={`/organizer/events/${r.id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>
+                      <Link href={`/organizer/events/${r.id}`} className="text-link hover:underline">
                         Edit
                       </Link>
-                      <DeleteEventButton id={r.id} title={r.title} hasBookings={r.totalBookings > 0} />
+                      <DeleteEventButton id={r.id} title={r.title} hasBookings={r.totalBookings > 0} asLink />
                     </div>
                   </TableCell>
                 </TableRow>

@@ -14,7 +14,7 @@ export type PublicEvent = {
   hasBanner: boolean;
   distances: { id: number; label: string; price: number }[];
   sizes: (typeof TSHIRT_SIZES)[number][];
-  documents: { id: number; title: string }[];
+  documents: { id: number; title: string; image: boolean }[];
 };
 
 const TZ = "Asia/Manila";

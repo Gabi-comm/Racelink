@@ -2,8 +2,8 @@ import { Suspense, type CSSProperties } from "react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
-import { Ban, Search } from "lucide-react";
-import { StatusMark } from "@/components/status-badge";
+import { Search } from "lucide-react";
+import { PageHeader, TABLE_SHELL } from "@/components/stat";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getUsers } from "@/lib/queries/users";
@@ -19,9 +19,7 @@ export const metadata: Metadata = { title: "Users" };
 export default function AdminPage({ searchParams }: PageProps<"/admin">) {
   return (
     <div className="grid gap-6">
-      <div>
-        <h1 className="font-display text-3xl font-bold tracking-tight">Users</h1>
-      </div>
+      <PageHeader eyebrow="Platform administration" title="Users & roles" description="Manage access, permissions, and account status." />
       <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
         <Users searchParams={searchParams} />
       </Suspense>
@@ -77,6 +75,7 @@ async function Users({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
   return (
     <>
       <FilterTabs
+        variant="underline"
         label="Filter by role"
         items={(["all", "runner", "organizer", "admin"] as const).map((r) => ({
           href: href(r),
@@ -85,35 +84,36 @@ async function Users({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
           active: role === r,
         }))}
       />
-      <div className="grid gap-3 rounded-lg bg-card p-4 ring-1 ring-border sm:grid-cols-[1fr_11rem_11rem] sm:items-end">
-        <Form action="/admin" className="grid gap-1" role="search">
-          <label htmlFor="user-search" className="text-xs font-medium text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-border">
+        <Form action="/admin" className="w-full sm:w-80" role="search">
+          <label htmlFor="user-search" className="sr-only">
             Search
           </label>
           {role !== "all" && <input type="hidden" name="role" value={role} />}
           {status && <input type="hidden" name="status" value={status} />}
           {sort && <input type="hidden" name="sort" value={sort} />}
           <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input id="user-search" name="q" defaultValue={q} placeholder="Name or email" className="h-9 pl-8" />
+            <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input id="user-search" name="q" defaultValue={q} placeholder="Name or email" className="h-12 rounded-xl pl-10 text-base" />
           </div>
         </Form>
-        <UrlSelect param="status" label="Status" value={status} options={STATUS_OPTIONS} />
-        <UrlSelect param="sort" label="Sort" value={sort} options={SORT_OPTIONS} />
-      </div>
-      <div className="-mt-2 flex items-center justify-between gap-3 text-sm text-muted-foreground">
-        {/* count pops when it changes */}
-        <p>
-          Showing{" "}
-          <span key={shown.length} className="demo-pop inline-block font-semibold text-foreground tabular-nums">
-            {shown.length}
-          </span> of {list.length} accounts
-        </p>
-        {filtered && (
-          <Link href="/admin" className="font-medium text-primary hover:underline">
-            Clear filters
-          </Link>
-        )}
+        <UrlSelect big param="status" label="Status" value={status} options={STATUS_OPTIONS} className="w-full sm:w-52" />
+        <UrlSelect big param="sort" label="Sort" value={sort} options={SORT_OPTIONS} className="w-full sm:w-52" />
+        <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
+          {filtered && (
+            <Link href="/admin" className="font-medium text-link hover:underline">
+              Clear filters
+            </Link>
+          )}
+          {/* count pops when it changes */}
+          <p>
+            Showing{" "}
+            <span key={shown.length} className="demo-pop inline-block font-bold text-foreground tabular-nums">
+              {shown.length}
+            </span>{" "}
+            of <span className="font-bold text-foreground tabular-nums">{list.length.toLocaleString("en-PH")}</span> accounts
+          </p>
+        </div>
       </div>
 
       {shown.length === 0 ? (
@@ -122,18 +122,17 @@ async function Users({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
           <p className="mt-2 text-muted-foreground">Try another role or status, or clear the search.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg bg-card ring-1 ring-border">
+        <div className={TABLE_SHELL}>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-4">User</TableHead>
+                <TableHead className="pl-5">User</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead className="text-right">Bookings</TableHead>
-                <TableHead className="text-right">Races</TableHead>
+                <TableHead>Bookings</TableHead>
+                <TableHead>Races</TableHead>
                 <TableHead>Joined</TableHead>
-                <TableHead className="pr-4 text-right">
-                  <span className="sr-only">Actions</span>
-                </TableHead>
+                <TableHead className="pr-5">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody key={listKey}>
@@ -145,30 +144,37 @@ async function Users({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
                     className={cn("row-in transition-colors duration-300", u.banned && "bg-destructive/[0.03]")}
                     style={{ "--i": Math.min(i, 14) } as CSSProperties}
                   >
-                    <TableCell className="pl-4">
-                      <p className="flex items-center gap-2 font-semibold">
-                        {u.name}
-                        {self && <span className="text-xs font-medium text-muted-foreground">(you)</span>}
-                        {u.banned && (
-                          <StatusMark tone="danger" icon={Ban}>
-                            Banned
-                          </StatusMark>
-                        )}
-                      </p>
-                      <p className="text-sm text-muted-foreground">{u.email}</p>
-                      {u.banned && u.banReason && <p className="text-xs text-destructive">Reason: {u.banReason}</p>}
+                    <TableCell className="pl-5">
+                      <div className="flex items-center gap-3">
+                        <Initials name={u.name} />
+                        <div className="min-w-0">
+                          <p className="flex items-center gap-2 font-semibold">
+                            {u.name}
+                            {self && <span className={cn(PILL, "bg-brand-light/20 text-link")}>You</span>}
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">{u.email}</p>
+                          {u.banned && u.banReason && <p className="text-xs text-destructive">Reason: {u.banReason}</p>}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {u.banned ? (
+                        <span className={cn(PILL, "bg-destructive/10 text-destructive")}>Banned</span>
+                      ) : (
+                        <span className={cn(PILL, "bg-marking text-marking-foreground")}>Active</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {self ? (
-                        <span className="text-sm font-medium">{ROLE_LABEL[isRole(u.role) ? u.role : "runner"]}</span>
+                        <span className="text-sm font-semibold">{ROLE_LABEL[isRole(u.role) ? u.role : "runner"]}</span>
                       ) : (
                         <RoleSelect key={u.role} userId={u.id} name={u.name} role={u.role} />
                       )}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">{u.bookings}</TableCell>
-                    <TableCell className="text-right tabular-nums">{u.events}</TableCell>
-                    <TableCell className="whitespace-nowrap text-muted-foreground">{joined.format(u.createdAt)}</TableCell>
-                    <TableCell className="pr-4 text-right">{!self && <BanButton userId={u.id} name={u.name} banned={!!u.banned} />}</TableCell>
+                    <TableCell className="tabular-nums">{u.bookings || <span className="text-muted-foreground">—</span>}</TableCell>
+                    <TableCell className="tabular-nums">{u.events || <span className="text-muted-foreground">—</span>}</TableCell>
+                    <TableCell className="whitespace-nowrap">{joined.format(u.createdAt)}</TableCell>
+                    <TableCell className="pr-5">{!self && <BanButton userId={u.id} name={u.name} banned={!!u.banned} />}</TableCell>
                   </TableRow>
                 );
               })}
@@ -177,5 +183,21 @@ async function Users({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
         </div>
       )}
     </>
+  );
+}
+
+const PILL = "inline-flex items-center rounded-full px-3 py-1 text-[0.7rem] font-bold tracking-[0.12em] whitespace-nowrap uppercase";
+
+function Initials({ name }: { name: string }) {
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+  return (
+    <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-full bg-[#7b8ce0] text-sm font-bold text-white">
+      {initials}
+    </span>
   );
 }

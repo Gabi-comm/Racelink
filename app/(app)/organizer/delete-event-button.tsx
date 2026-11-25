@@ -15,9 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { deleteEvent } from "./actions";
 
-type Props = { id: number; title: string; hasBookings: boolean; redirectTo?: string };
+type Props = { id: number; title: string; hasBookings: boolean; redirectTo?: string; asLink?: boolean };
 
-export function DeleteEventButton({ id, title, hasBookings, redirectTo }: Props) {
+export function DeleteEventButton({ id, title, hasBookings, redirectTo, asLink }: Props) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -39,9 +39,15 @@ export function DeleteEventButton({ id, title, hasBookings, redirectTo }: Props)
 
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setError(""); }}>
-      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setOpen(true)}>
-        Delete
-      </Button>
+      {asLink ? (
+        <button type="button" className="text-xs font-semibold text-destructive hover:underline" onClick={() => setOpen(true)}>
+          Delete
+        </button>
+      ) : (
+        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setOpen(true)}>
+          Delete
+        </Button>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete {title}?</DialogTitle>

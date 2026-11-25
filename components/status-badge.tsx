@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Ban, CheckCircle2, CircleDashed, CircleDot, Clock3, XCircle, type LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EVENT_STATUS_LABEL, type EventStatus } from "@/lib/constants";
 
@@ -10,7 +10,7 @@ const TONE: Record<Tone, string> = {
   success: "text-success",
   warning: "text-warning",
   danger: "text-destructive",
-  brand: "text-primary",
+  brand: "text-link",
 };
 
 // glyph + word, walang pill background
@@ -23,36 +23,36 @@ export function StatusMark({ tone, icon: Icon, children, className }: { tone: To
   );
 }
 
-const EVENT: Record<EventStatus, { tone: Tone; icon: LucideIcon }> = {
-  draft: { tone: "neutral", icon: CircleDashed },
-  open: { tone: "success", icon: CircleDot },
-  closed: { tone: "warning", icon: Clock3 },
-  cancelled: { tone: "danger", icon: Ban },
+const PILL = "inline-flex items-center rounded-full px-3 py-1 text-[0.7rem] font-bold tracking-[0.12em] whitespace-nowrap uppercase";
+
+const EVENT_PILL: Record<EventStatus, string> = {
+  draft: "bg-muted text-muted-foreground",
+  open: "bg-marking text-marking-foreground",
+  closed: "bg-brand-light/20 text-link",
+  cancelled: "bg-destructive/10 text-destructive",
 };
 
 export function StatusBadge({ status }: { status: EventStatus }) {
-  const s = EVENT[status];
-  return (
-    <StatusMark tone={s.tone} icon={s.icon}>
-      {EVENT_STATUS_LABEL[status]}
-    </StatusMark>
-  );
+  return <span className={cn(PILL, EVENT_PILL[status])}>{EVENT_STATUS_LABEL[status]}</span>;
 }
 
 export type BookingStatus = "pending" | "approved" | "rejected" | "cancelled";
 
-const BOOKING: Record<BookingStatus, { tone: Tone; icon: LucideIcon; label: string }> = {
-  pending: { tone: "warning", icon: Clock3, label: "To review" },
-  approved: { tone: "success", icon: CheckCircle2, label: "Confirmed" },
-  rejected: { tone: "danger", icon: XCircle, label: "Rejected" },
-  cancelled: { tone: "neutral", icon: Ban, label: "Cancelled" },
+const BOOKING_LABEL: Record<BookingStatus, string> = {
+  pending: "To review",
+  approved: "Confirmed",
+  rejected: "Rejected",
+  cancelled: "Cancelled",
+};
+
+// pill per status: review periwinkle, confirmed lime, rejected red, cancelled gray
+const BOOKING_PILL: Record<BookingStatus, string> = {
+  pending: "bg-brand-light/20 text-link",
+  approved: "bg-marking text-marking-foreground",
+  rejected: "bg-destructive/10 text-destructive",
+  cancelled: "bg-muted text-muted-foreground",
 };
 
 export function BookingStatusMark({ status, label }: { status: BookingStatus; label?: string }) {
-  const s = BOOKING[status];
-  return (
-    <StatusMark tone={s.tone} icon={s.icon}>
-      {label ?? s.label}
-    </StatusMark>
-  );
+  return <span className={cn(PILL, BOOKING_PILL[status])}>{label ?? BOOKING_LABEL[status]}</span>;
 }

@@ -27,7 +27,7 @@ const NAV: Record<Role, AppNavItem[]> = {
 
 export function AppHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="dark sticky top-0 z-40 border-b border-white/10 bg-[#172340] text-foreground">
       <Suspense fallback={<HeaderShell />}>
         <UserNav />
       </Suspense>

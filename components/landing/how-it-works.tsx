@@ -10,7 +10,7 @@ export function HowItWorks() {
       eyebrow="How it works"
       title={
         <>
-          Four steps to the <span className="text-primary">start line.</span>
+          Four steps to the <span className="text-link">start line.</span>
         </>
       }
       steps={STEPS}
@@ -42,7 +42,7 @@ function PickScene() {
             {i === 1 && (
               <>
                 <Ripple at={1.15} />
-                <span className="demo-pop pointer-events-none absolute inset-0 rounded-lg ring-2 ring-primary" style={t(1.2)} />
+                <span className="demo-pop pointer-events-none absolute inset-0 rounded-lg ring-2 ring-link" style={t(1.2)} />
               </>
             )}
           </div>
@@ -87,7 +87,7 @@ function PayScene() {
         </span>
         <div className="demo-drop absolute inset-x-6 top-1/2 -translate-y-1/2 rounded-md border bg-card p-3 shadow-sm" style={t(0.5)}>
           <div className="flex items-center gap-2.5">
-            <FileImage className="size-5 text-primary" />
+            <FileImage className="size-5 text-link" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-semibold">gcash-receipt.jpg</p>
               <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -143,7 +143,7 @@ function ApproveScene() {
         </div>
       </div>
       <p className="demo-in mt-4 flex items-center gap-1.5 text-xs font-semibold" style={t(2.2)}>
-        <BadgeCheck className="size-4 text-primary" /> Bib <span className="tabular-nums">#1042</span> assigned automatically
+        <BadgeCheck className="size-4 text-link" /> Bib <span className="tabular-nums">#1042</span> assigned automatically
       </p>
       <div className="demo-in absolute right-5 bottom-5 flex items-center gap-2 rounded-lg border bg-popover px-3 py-2 text-xs font-semibold shadow-md" style={t(2.5)}>
         <CircleCheck className="size-4 text-success" /> Payment approved
@@ -157,14 +157,14 @@ function BibScene() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-8">
       <div className="relative">
-        <div className="demo-pop w-64 overflow-hidden rounded-lg border bg-white text-[#221a1a] shadow-lg" style={t(0.2)}>
-          <div className="bg-[#d40000] px-4 py-2 text-[0.65rem] font-bold tracking-[0.2em] text-white uppercase">BGC Night Dash · Apr 10</div>
+        <div className="demo-pop w-64 overflow-hidden rounded-lg border bg-white text-[#172340] shadow-lg" style={t(0.2)}>
+          <div className="bg-brand-deep px-4 py-2 text-[0.65rem] font-bold tracking-[0.2em] text-white uppercase">BGC Night Dash · Apr 10</div>
           <p className="demo-in px-4 pt-3 font-display text-6xl leading-none font-extrabold tracking-tight tabular-nums" style={t(0.6)}>
             1042
           </p>
           <div className="flex items-center justify-between px-4 pt-3 pb-4 text-xs font-semibold">
             <span>10K · Shirt M</span>
-            <span className="h-1.5 w-10 rounded-full bg-[#f2c200]" />
+            <span className="h-1.5 w-10 rounded-full bg-marking" />
           </div>
         </div>
         <span

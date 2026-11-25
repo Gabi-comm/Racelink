@@ -1,3 +1,4 @@
+import { ReceiptPreview } from "@/components/receipt-preview";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Form from "next/form";
@@ -8,7 +9,7 @@ import { BibEditor, RefundStatus, ReviewButtons, UndoConfirmButton } from "@/com
 import { ExportMenu } from "@/components/organizer/export-menu";
 import { UrlSelect } from "@/components/organizer/url-select";
 import { inTab, isParticipantTab, PARTICIPANT_TABS, type ParticipantTab } from "@/lib/participant-filters";
-import { EmptyState, PageHeader, Stat } from "@/components/stat";
+import { EmptyState, PageHeader, Stat, TABLE_SHELL } from "@/components/stat";
 import { BookingStatusMark } from "@/components/status-badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,8 +24,9 @@ export default function ParticipantsPage({ searchParams }: PageProps<"/organizer
   return (
     <div className="grid gap-6">
       <PageHeader
+        eyebrow="Race operations"
         title="Manage participants"
-        description="Review payments and confirm runners across all races. Undo a confirm if you approved one by mistake."
+        description="Review payments, assign bibs, and keep runners moving."
       />
       <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
         <Participants searchParams={searchParams} />
@@ -111,7 +113,7 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
           text={status === "pending" && !q ? "You're caught up. New receipts show up here as runners upload them." : "Try another race, tab, or search."}
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg bg-card ring-1 ring-border">
+        <div className={TABLE_SHELL}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -123,9 +125,7 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
                 {status !== "cancelled" && <TableHead>Status</TableHead>}
                 <TableHead className="text-right">Bib</TableHead>
                 {status === "cancelled" && <TableHead>Status</TableHead>}
-                <TableHead className="pr-4 text-right">
-                  <span className="sr-only">Actions</span>
-                </TableHead>
+                <TableHead className="pr-4 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             {/* keyed by the filters so the rows fade in again on every change */}
@@ -137,9 +137,6 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
           </Table>
         </div>
       )}
-      <p className="text-sm text-muted-foreground">
-        Bibs are assigned in order when you approve a payment. Click a bib number to change it, or use Undo confirm to send a runner back to review.
-      </p>
     </>
   );
 }
@@ -149,8 +146,8 @@ function Row({ p, showRace, refundTab }: { p: Participant; showRace: boolean; re
     <TableRow className="align-top">
       <TableCell className="pl-4">
         <p className="font-semibold">{p.runnerName}</p>
-        <p className="text-sm text-muted-foreground">{p.email}</p>
-        {p.phone && <p className="text-sm text-muted-foreground">{p.phone}</p>}
+        <p className="mt-1 text-xs text-muted-foreground">{p.email}</p>
+        {p.phone && <p className="text-xs text-muted-foreground">{p.phone}</p>}
       </TableCell>
       {showRace && (
         <TableCell className="max-w-52">
@@ -161,20 +158,19 @@ function Row({ p, showRace, refundTab }: { p: Participant; showRace: boolean; re
         </TableCell>
       )}
       <TableCell className="whitespace-nowrap">
-        <p className="font-semibold">{p.distanceLabel}</p>
-        <p className="text-sm text-muted-foreground">Shirt {p.tshirtSize}</p>
+        <p>
+          {p.distanceLabel} · {p.tshirtSize}
+        </p>
       </TableCell>
       <TableCell className="whitespace-nowrap">
         {p.proof ? (
           <>
-            <p className="tabular-nums">
+            <p className="font-bold tabular-nums">
               {formatPeso(p.proof.amount)}
-              {p.proof.amount < p.price && <span className="text-destructive"> of {formatPeso(p.price)}</span>}
+              {p.proof.amount < p.price && <span className="font-normal text-destructive"> of {formatPeso(p.price)}</span>}
             </p>
-            <p className="text-sm text-muted-foreground">{p.proof.referenceNo ? `Ref ${p.proof.referenceNo}` : "No reference"}</p>
-            <a href={`/api/receipts/${p.proof.id}`} target="_blank" rel="noreferrer" className="text-sm font-medium text-primary hover:underline">
-              View receipt
-            </a>
+            <p className="mt-1 text-xs text-muted-foreground">{p.proof.referenceNo ? `Ref ${p.proof.referenceNo}` : "No reference"}</p>
+            <ReceiptPreview receiptId={p.proof.id} className="text-xs font-medium text-link underline underline-offset-2" />
           </>
         ) : (
           <p className="text-sm text-muted-foreground">No receipt</p>
