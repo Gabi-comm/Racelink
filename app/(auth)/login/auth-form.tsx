@@ -10,7 +10,8 @@ import { PASSWORD_RULES } from "@/lib/password";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSearchParams } from "next/navigation";
 import { safeNext } from "@/lib/roles";
-import { logIn, signUp, type AuthState } from "./actions";
+import { MailCheck } from "lucide-react";
+import { forgotPassword, logIn, signUp, type AuthState } from "./actions";
 
 type Props = { next: string };
 
@@ -31,6 +32,13 @@ export function AuthPanel(props: Props) {
   const params = useSearchParams();
   const next = params.has("next") ? safeNext(params.get("next")) : props.next;
   const tab = params.get("tab") === "signup" ? "signup" : "login";
+  // messages from the email links (verify / reset) that land back here
+  const banner =
+    params.get("reset") === "1"
+      ? "Password updated. Log in with your new password."
+      : params.get("verified") === "1" && params.get("error")
+        ? "That verification link has expired or was already used. Log in and we'll send you a new one."
+        : undefined;
   return (
     <Tabs key={tab} defaultValue={tab} className="gap-5">
       <TabsList className="w-full">
@@ -39,7 +47,7 @@ export function AuthPanel(props: Props) {
       </TabsList>
       <AutoHeight>
         <TabsContent value="login" className={PANEL}>
-          <LogInForm next={next} />
+          <LogInSection next={next} banner={banner} />
         </TabsContent>
         <TabsContent value="signup" className={PANEL}>
           <SignUpForm next={next} />
@@ -77,16 +85,29 @@ function AutoHeight({ children }: { children: ReactNode }) {
   );
 }
 
-function LogInForm({ next }: { next: string }) {
+// log in, or the forgot-password step in its place
+function LogInSection({ next, banner }: { next: string; banner?: string }) {
+  const [forgot, setForgot] = useState<string | null>(null);
+  return forgot === null ? (
+    <LogInForm next={next} banner={banner} onForgot={setForgot} />
+  ) : (
+    <ForgotForm email={forgot} onBack={() => setForgot(null)} />
+  );
+}
+
+function LogInForm({ next, banner, onForgot }: { next: string; banner?: string; onForgot: (email: string) => void }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(logIn, {});
+  const emailRef = useRef<HTMLInputElement>(null);
   return (
     <form action={action} className="grid gap-4" noValidate>
       <div className="grid gap-1">
         <CardTitle>Welcome back</CardTitle>
         <CardDescription>Log in to manage your race registrations.</CardDescription>
       </div>
+      {banner && !state.error && !state.notice && <Notice message={banner} />}
       <input type="hidden" name="next" value={next} />
       <Field
+        ref={emailRef}
         label="Email"
         name="email"
         type="email"
@@ -100,7 +121,17 @@ function LogInForm({ next }: { next: string }) {
         type="password"
         autoComplete="current-password"
         error={state.fieldErrors?.password}
+        action={
+          <button
+            type="button"
+            onClick={() => onForgot(emailRef.current?.value ?? "")}
+            className="text-sm font-medium text-link underline-offset-4 outline-none hover:underline focus-visible:underline"
+          >
+            Forgot password?
+          </button>
+        }
       />
+      <Notice message={state.notice} />
       <FormError message={state.error} />
       <Button type="submit" size="lg" disabled={pending}>
         {pending ? "Logging in…" : "Log In"}
@@ -109,8 +140,53 @@ function LogInForm({ next }: { next: string }) {
   );
 }
 
+function ForgotForm({ email, onBack }: { email: string; onBack: () => void }) {
+  const [state, action, pending] = useActionState<AuthState, FormData>(forgotPassword, {});
+  if (state.sentTo) {
+    return (
+      <SentPanel
+        title="Check your email"
+        to={state.sentTo}
+        text="If there's a RaceLink account for this address, we sent a link to reset your password. It expires in 1 hour."
+        onBack={onBack}
+      />
+    );
+  }
+  return (
+    <form action={action} className="grid gap-4" noValidate>
+      <div className="grid gap-1">
+        <CardTitle>Forgot your password?</CardTitle>
+        <CardDescription>Enter your account email and we&apos;ll send you a link to choose a new one.</CardDescription>
+      </div>
+      <Field
+        label="Email"
+        name="email"
+        type="email"
+        autoComplete="email"
+        autoFocus
+        defaultValue={state.values?.email ?? email}
+        error={state.fieldErrors?.email}
+      />
+      <FormError message={state.error} />
+      <Button type="submit" size="lg" disabled={pending}>
+        {pending ? "Sending…" : "Send reset link"}
+      </Button>
+      <BackButton onClick={onBack} />
+    </form>
+  );
+}
+
 function SignUpForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(signUp, {});
+  if (state.sentTo) {
+    return (
+      <SentPanel
+        title="Verify your email"
+        to={state.sentTo}
+        text="Open the link in that email to activate your account. You'll be logged in right after. The link expires in 24 hours, so check your spam folder if you don't see it."
+      />
+    );
+  }
   return (
     <form action={action} className="grid gap-4" noValidate>
       <div className="grid gap-1">
@@ -149,8 +225,44 @@ function SignUpForm({ next }: { next: string }) {
   );
 }
 
+// after an email goes out: where it went and what to do next
+function SentPanel({ title, to, text, onBack }: { title: string; to: string; text: string; onBack?: () => void }) {
+  return (
+    <div role="status" className="grid gap-4">
+      <span className="grid size-12 place-items-center rounded-xl bg-marking text-marking-foreground">
+        <MailCheck className="size-6" aria-hidden />
+      </span>
+      <div className="grid gap-1">
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>
+          We sent an email to <strong className="font-semibold break-all text-foreground">{to}</strong>.
+        </CardDescription>
+      </div>
+      <p className="text-sm text-muted-foreground">{text}</p>
+      {onBack && <BackButton onClick={onBack} />}
+    </div>
+  );
+}
+
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="justify-self-center text-sm font-medium text-link underline-offset-4 outline-none hover:underline focus-visible:underline">
+      Back to log in
+    </button>
+  );
+}
+
+function Notice({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p role="status" className="rounded-lg bg-brand-light/15 px-3 py-2 text-sm text-foreground">
+      {message}
+    </p>
+  );
+}
+
 // password field with the live requirement list under it
-function NewPasswordField({ error: serverError }: { error?: string }) {
+export function NewPasswordField({ error: serverError }: { error?: string }) {
   const [value, setValue] = useState("");
   const id = useId();
   // drop the server's complaint once every rule is met
@@ -179,18 +291,26 @@ function NewPasswordField({ error: serverError }: { error?: string }) {
   );
 }
 
-function Field({
+export function Field({
   label,
   name,
   error,
   hint,
+  action,
   ...props
-}: ComponentProps<typeof Input> & { label: string; name: string; error?: string; hint?: string }) {
+}: ComponentProps<typeof Input> & { label: string; name: string; error?: string; hint?: string; action?: ReactNode }) {
   const id = `${useId()}-${name}`;
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   return (
     <div className="grid gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      {action ? (
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor={id}>{label}</Label>
+          {action}
+        </div>
+      ) : (
+        <Label htmlFor={id}>{label}</Label>
+      )}
       <Input
         id={id}
         name={name}
@@ -213,7 +333,7 @@ function Field({
   );
 }
 
-function FormError({ message }: { message?: string }) {
+export function FormError({ message }: { message?: string }) {
   if (!message) return null;
   return (
     <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">

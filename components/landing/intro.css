@@ -1,0 +1,147 @@
+/* logo pops in piece by piece, then flies to the header */
+
+.rl-intro {
+  --rl-ink: #f6f2e8;
+  --rl-accent: #e2f57a;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #172340;
+  /* fallback kapag walang JS */
+  animation: rl-fallback 0.4s ease 3.5s forwards;
+}
+
+/* flying to a light header: switch to the light logo colors */
+.rl-intro-light {
+  --rl-ink: #172340;
+  --rl-accent: #4757b8;
+}
+
+.rl-intro-stage {
+  width: min(64vw, 340px);
+  aspect-ratio: 181 / 119;
+  transform-origin: 0 0;
+}
+
+.rl-intro-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.rl-ink,
+.rl-accent {
+  transition: fill 0.6s ease;
+}
+
+.rl-ink {
+  fill: var(--rl-ink);
+}
+
+.rl-accent {
+  fill: var(--rl-accent);
+}
+
+.rl-intro-r,
+.rl-intro-head,
+.rl-intro-pop,
+.rl-intro-link {
+  opacity: 0;
+  transform-box: fill-box;
+  animation-fill-mode: forwards;
+}
+
+.rl-intro-r {
+  transform-origin: 50% 60%;
+  animation-name: rl-r;
+  animation-duration: 0.6s;
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.rl-intro-head {
+  transform-origin: 50% 50%;
+  animation-name: rl-head;
+  animation-duration: 0.55s;
+  animation-timing-function: cubic-bezier(0.34, 1.7, 0.64, 1);
+}
+
+.rl-intro-pop {
+  transform-origin: 50% 100%;
+  animation-name: rl-pop;
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.rl-intro-link {
+  transform-origin: 50% 50%;
+  animation-name: rl-slide;
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes rl-r {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rl-head {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.2);
+  }
+  40% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rl-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rl-slide {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rl-fallback {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rl-intro {
+    display: none;
+  }
+}

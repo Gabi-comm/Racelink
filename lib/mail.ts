@@ -22,6 +22,50 @@ function transport() {
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
+// account emails: one button, plain-text copy of the link for clients that strip HTML
+async function sendLinkEmail(to: string, subject: string, heading: string, body: string, button: string, url: string, footer: string) {
+  const mailer = transport();
+  if (!mailer) {
+    // walang SMTP locally: print the link so the flow can still be tested
+    if (process.env.NODE_ENV !== "production") console.info(`[mail] SMTP not set. ${subject} for ${to}:\n${url}`);
+    else console.warn(`[mail] SMTP_USER/SMTP_PASS not set, "${subject}" email skipped`);
+    return;
+  }
+  const text = [heading, "", body, "", `${button}: ${url}`, "", footer].join("\n");
+  const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#172340;max-width:480px">
+<h2 style="margin:0 0 12px;font-size:22px">${esc(heading)}</h2>
+<p style="margin:0 0 20px">${esc(body)}</p>
+<p style="margin:0 0 20px"><a href="${esc(url)}" style="display:inline-block;background:#e2f57a;color:#172340;font-weight:bold;text-decoration:none;padding:12px 22px;border-radius:10px">${esc(button)}</a></p>
+<p style="margin:0 0 8px;font-size:13px;color:#5b6478">Or paste this link into your browser:<br><a href="${esc(url)}" style="color:#4757b8;word-break:break-all">${esc(url)}</a></p>
+<p style="margin:16px 0 0;font-size:13px;color:#5b6478">${esc(footer)}</p>
+</div>`;
+  await mailer.sendMail({ from: `"RaceLink" <${process.env.SMTP_USER}>`, to, subject, text, html });
+}
+
+export function sendVerificationEmail(to: string, name: string, url: string) {
+  return sendLinkEmail(
+    to,
+    "Verify your RaceLink email",
+    `Hi ${name.split(" ")[0]}, confirm your email`,
+    "Tap the button to verify your email and finish setting up your RaceLink runner account.",
+    "Verify email",
+    url,
+    "The link expires in 24 hours. If you didn't sign up for RaceLink, you can ignore this email.",
+  );
+}
+
+export function sendPasswordResetEmail(to: string, name: string, url: string) {
+  return sendLinkEmail(
+    to,
+    "Reset your RaceLink password",
+    `Hi ${name.split(" ")[0]}, reset your password`,
+    "We got a request to reset the password for your RaceLink account. Tap the button to choose a new one.",
+    "Reset password",
+    url,
+    "The link expires in 1 hour. If you didn't ask for this, you can ignore this email and your password stays the same.",
+  );
+}
+
 export async function sendRaceRequestEmail(req: RaceRequestInput, id: number | undefined) {
   const mailer = transport();
   if (!mailer) {

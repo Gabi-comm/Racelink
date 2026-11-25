@@ -43,6 +43,13 @@
       "when": 1795507734593,
       "tag": "0005_terms_consents",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1795574189243,
+      "tag": "0006_verify_existing_users",
+      "breakpoints": true
     }
   ]
 }
