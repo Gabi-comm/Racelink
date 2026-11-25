@@ -33,9 +33,7 @@ export default function OrganizerDashboardPage() {
           </Link>
         }
       />
-      <Suspense fallback={<DashboardSkeleton />}>
-        <Dashboard />
-      </Suspense>
+      <Dashboard />
     </div>
   );
 }
@@ -177,20 +175,4 @@ function UpcomingRaces({ races }: { races: OrganizerAnalytics["upcoming"] }) {
 
 function NoData() {
   return <p className="py-6 text-center text-sm text-muted-foreground">No runners yet.</p>;
-}
-
-function DashboardSkeleton() {
-  return (
-    <div className="grid gap-4" aria-hidden>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-        {Array.from({ length: 7 }, (_, i) => (
-          <div key={i} className="h-36 rounded-xl bg-card ring-1 ring-border" />
-        ))}
-      </div>
-      <div className="stagger grid gap-4 lg:grid-cols-2">
-        <div className="h-72 rounded-lg bg-card ring-1 ring-border" />
-        <div className="h-72 rounded-lg bg-card ring-1 ring-border" />
-      </div>
-    </div>
-  );
 }

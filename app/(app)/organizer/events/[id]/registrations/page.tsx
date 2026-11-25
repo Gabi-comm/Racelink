@@ -1,5 +1,4 @@
 import { ReceiptPreview } from "@/components/receipt-preview";
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
@@ -33,9 +32,7 @@ export default function RegistrationsPage({ params, searchParams }: PageProps<"/
       <Link href="/organizer/events" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ChevronLeft className="size-4" aria-hidden /> Manage events
       </Link>
-      <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
-        <Registrations params={params} searchParams={searchParams} />
-      </Suspense>
+      <Registrations params={params} searchParams={searchParams} />
     </div>
   );
 }
@@ -136,7 +133,7 @@ async function Registrations({
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody key={`${filter}|${q}`} className="stagger">
+            <TableBody>
               {shown.map((r) => (
                 <Row key={r.id} r={r} refundTab={filter === "cancelled"} />
               ))}

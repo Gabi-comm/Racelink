@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -24,9 +23,7 @@ export default function RequestsPage({ searchParams }: PageProps<"/organizer/req
         title="Request forms"
         description="Review race proposals from organizations. Approving one creates a draft race for you to finish."
       />
-      <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
-        <Requests searchParams={searchParams} />
-      </Suspense>
+      <Requests searchParams={searchParams} />
     </div>
   );
 }

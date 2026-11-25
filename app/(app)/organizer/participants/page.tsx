@@ -1,5 +1,4 @@
 import { ReceiptPreview } from "@/components/receipt-preview";
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
@@ -28,9 +27,7 @@ export default function ParticipantsPage({ searchParams }: PageProps<"/organizer
         title="Manage participants"
         description="Review payments, assign bibs, and keep runners moving."
       />
-      <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
-        <Participants searchParams={searchParams} />
-      </Suspense>
+      <Participants searchParams={searchParams} />
     </div>
   );
 }
@@ -129,7 +126,7 @@ async function Participants({ searchParams }: Pick<PageProps<"/organizer/partici
               </TableRow>
             </TableHeader>
             {/* keyed by the filters so the rows fade in again on every change */}
-            <TableBody key={`${race?.id ?? "all"}|${status}|${q}`} className="stagger">
+            <TableBody>
               {shown.map((p) => (
                 <Row key={p.id} p={p} showRace={!race} refundTab={status === "cancelled"} />
               ))}

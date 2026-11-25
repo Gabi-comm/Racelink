@@ -1,4 +1,3 @@
-import { Suspense, type CSSProperties } from "react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
@@ -20,9 +19,7 @@ export default function AdminPage({ searchParams }: PageProps<"/admin">) {
   return (
     <div className="grid gap-6">
       <PageHeader eyebrow="Platform administration" title="Users & roles" description="Manage access, permissions, and account status." />
-      <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
-        <Users searchParams={searchParams} />
-      </Suspense>
+      <Users searchParams={searchParams} />
     </div>
   );
 }
@@ -68,8 +65,6 @@ async function Users({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
   };
   // tab counts follow the other filters, so the numbers match what you'd see
   const countFor = (r: Role | "all") => (r === "all" ? bySearch.length : bySearch.filter((u) => u.role === r).length);
-  // changes whenever the filters do, so the list replays its fade-in
-  const listKey = `${role}|${status}|${sort}|${q}`;
   const joined = new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeZone: "Asia/Manila" });
 
   return (
@@ -85,7 +80,7 @@ async function Users({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
         }))}
       />
       <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-border">
-        <Form action="/admin" className="w-full sm:w-80" role="search">
+        <Form action="/admin" scroll={false} className="w-full sm:w-80" role="search">
           <label htmlFor="user-search" className="sr-only">
             Search
           </label>
@@ -117,7 +112,7 @@ async function Users({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
       </div>
 
       {shown.length === 0 ? (
-        <div key={listKey} className="row-in rounded-lg bg-card p-10 text-center ring-1 ring-border">
+        <div className="rounded-lg bg-card p-10 text-center ring-1 ring-border">
           <p className="font-display text-2xl font-bold">No users match</p>
           <p className="mt-2 text-muted-foreground">Try another role or status, or clear the search.</p>
         </div>
@@ -135,15 +130,11 @@ async function Users({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
                 <TableHead className="pr-5">Action</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody key={listKey}>
-              {shown.map((u, i) => {
+            <TableBody>
+              {shown.map((u) => {
                 const self = u.id === me.id;
                 return (
-                  <TableRow
-                    key={u.id}
-                    className={cn("row-in transition-colors duration-300", u.banned && "bg-destructive/[0.03]")}
-                    style={{ "--i": Math.min(i, 14) } as CSSProperties}
-                  >
+                  <TableRow key={u.id} className={cn("transition-colors duration-300", u.banned && "bg-destructive/[0.03]")}>
                     <TableCell className="pl-5">
                       <div className="flex items-center gap-3">
                         <Initials name={u.name} />

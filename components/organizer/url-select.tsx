@@ -41,10 +41,13 @@ export function UrlSelect({
           if (e.target.value) next.set(param, e.target.value);
           else next.delete(param);
           const s = next.toString();
-          startTransition(() => router.push(`${pathname}${s ? `?${s}` : ""}`));
+          // same quick cross-fade as the filter tabs, and no jump to the top
+          startTransition(() =>
+            router.push(`${pathname}${s ? `?${s}` : ""}`, { scroll: false, transitionTypes: ["tab-switch"] }),
+          );
         }}
         className={cn(
-          "h-9 w-full min-w-0 rounded-lg border border-input bg-card px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-busy:opacity-60",
+          "h-9 w-full min-w-0 rounded-lg border border-input bg-card px-2.5 text-sm transition-opacity duration-200 outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-busy:opacity-70",
           big && "h-12 rounded-xl px-3.5 text-base",
         )}
       >

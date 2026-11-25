@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -16,9 +15,7 @@ export default function RegisterPage({ params }: PageProps<"/register/[id]">) {
       <Link href="/races" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ChevronLeft className="size-4" aria-hidden /> All races
       </Link>
-      <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
-        <Register params={params} />
-      </Suspense>
+      <Register params={params} />
     </div>
   );
 }

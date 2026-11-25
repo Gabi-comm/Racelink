@@ -22,15 +22,15 @@ export type RaceCardData = {
 export function RaceCard({ race, n, badge, actions }: { race: RaceCardData; n: number; badge?: string; actions: ReactNode }) {
   const d = dateParts(race.eventDate);
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-border">
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-border transition-[translate,box-shadow] duration-300 ease-out hover:shadow-[0_18px_40px_-18px_rgb(23_35_64/0.45)] hover:ring-brand-light focus-within:ring-brand-light motion-safe:hover:-translate-y-1">
       <div
-        className="relative h-44 overflow-hidden p-4"
+        className="relative h-44 overflow-hidden p-4 transition-[background-position] duration-500 ease-out motion-safe:group-hover:[background-position:32px_0]"
         style={race.hasBanner ? undefined : { backgroundColor: BANDS[n % BANDS.length], backgroundImage: STRIPES }}
       >
         {race.hasBanner && (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/api/events/${race.id}/banner`} alt="" loading="lazy" className="absolute inset-0 size-full object-cover" />
+            <img src={`/api/events/${race.id}/banner`} alt="" loading="lazy" className="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-105" />
             <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/20" />
           </>
         )}
@@ -43,7 +43,7 @@ export function RaceCard({ race, n, badge, actions }: { race: RaceCardData; n: n
           ))}
         </ul>
         <span
-          className="pointer-events-none absolute -right-1 -bottom-3 font-[family-name:var(--font-oswald)] text-[7.5rem] leading-none font-bold text-white/25"
+          className="pointer-events-none absolute -right-1 -bottom-3 font-[family-name:var(--font-oswald)] text-[7.5rem] leading-none font-bold text-white/25 transition-colors duration-300 group-hover:text-white/45"
           aria-hidden
         >
           {String(n + 1).padStart(2, "0")}

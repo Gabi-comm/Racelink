@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -21,9 +20,7 @@ export default function EditEventPage({ params, searchParams }: PageProps<"/orga
       <Link href="/organizer/events" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ChevronLeft className="size-4" aria-hidden /> Manage events
       </Link>
-      <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
-        <Editor params={params} searchParams={searchParams} />
-      </Suspense>
+      <Editor params={params} searchParams={searchParams} />
     </div>
   );
 }

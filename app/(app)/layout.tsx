@@ -9,7 +9,11 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
     <>
       <AppHeader />
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8">
-        <ViewTransition>{children}</ViewTransition>
+        {/* header tabs tag nav-forward / nav-back; everything else gets the soft page swap */}
+        <ViewTransition default={{ "nav-forward": "nav-forward", "nav-back": "nav-back", "tab-switch": "tab-swap", default: "page-swap" }}>
+          {/* page loads lang ang gumagamit nito; sa tab switch, naka-stay yung current page hanggang ready yung next */}
+          <Suspense fallback={<div className="min-h-96" />}>{children}</Suspense>
+        </ViewTransition>
       </main>
       <Suspense fallback={null}>
         <TermsGate />

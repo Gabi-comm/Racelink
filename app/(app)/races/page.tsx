@@ -1,6 +1,5 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
-import { RaceListSkeleton, Races } from "@/components/races/race-list";
+import { Races } from "@/components/races/race-list";
 import { getPublicEvents } from "@/lib/queries/events";
 import { requireUser } from "@/lib/session";
 
@@ -14,9 +13,7 @@ export default function RacesPage({ searchParams }: PageProps<"/races">) {
         <h1 className="mt-2 font-[family-name:var(--font-oswald)] text-5xl font-bold uppercase md:text-6xl">Find a race</h1>
         <p className="mt-2 text-muted-foreground">Metro Manila&apos;s next start line is waiting.</p>
       </div>
-      <Suspense fallback={<RaceListSkeleton />}>
-        <SignedInRaces searchParams={searchParams} />
-      </Suspense>
+      <SignedInRaces searchParams={searchParams} />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Suspense, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { eq } from "drizzle-orm";
@@ -17,9 +17,7 @@ export default function ProfilePage() {
       <div>
         <h1 className="font-display text-3xl font-bold tracking-tight">Profile</h1>
       </div>
-      <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
-        <Sections />
-      </Suspense>
+      <Sections />
     </div>
   );
 }

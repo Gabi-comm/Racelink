@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
@@ -43,9 +42,7 @@ export default function ManageEventsPage({ searchParams }: PageProps<"/organizer
           </Link>
         }
       />
-      <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
-        <Events searchParams={searchParams} />
-      </Suspense>
+      <Events searchParams={searchParams} />
     </div>
   );
 }
@@ -128,7 +125,7 @@ async function Events({ searchParams }: Pick<PageProps<"/organizer/events">, "se
                 <TableHead className="pr-4">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody key={`${tab}|${q}`} className="stagger">
+            <TableBody>
               {shown.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell className="pl-4">

@@ -1,4 +1,4 @@
-import { Suspense, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -17,11 +17,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = { title: "Home" };
 
 export default function DashboardPage() {
-  return (
-    <Suspense fallback={<div className="h-96 rounded-lg bg-card ring-1 ring-border" />}>
-      <Dashboard />
-    </Suspense>
-  );
+  return <Dashboard />;
 }
 
 // runner home; organizers and admins have their own workspace

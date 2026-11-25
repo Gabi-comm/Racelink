@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, ViewTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, UserRound, X } from "lucide-react";
@@ -36,6 +36,11 @@ export function AppNav({ home, items, badges, user, logo, logout }: Props) {
     )
     .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
+  // tab to the right = forward slide, to the left = back slide
+  const here = items.findIndex((i) => i.href === current);
+  const direction = (i: number) =>
+    here < 0 || i === here ? undefined : [i > here ? "nav-forward" : "nav-back"];
+
   const badge = (item: AppNavItem) => {
     const n = item.badgeKey ? badges[item.badgeKey] : 0;
     return n > 0 ? (
@@ -58,15 +63,22 @@ export function AppNav({ home, items, badges, user, logo, logout }: Props) {
         aria-label="Main"
         className="hidden flex-1 items-stretch gap-1 self-stretch lg:flex"
       >
-        {items.map((item) => (
+        {items.map((item, i) => (
           <Link
             key={item.href}
             href={item.href}
+            transitionTypes={direction(i)}
             aria-current={current === item.href ? "page" : undefined}
-            className="flex items-center border-b-2 border-transparent px-3 pt-0.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:border-link aria-[current=page]:text-foreground"
+            className="relative flex items-center px-3 pt-0.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:text-foreground"
           >
             {item.label}
             {badge(item)}
+            {current === item.href && (
+              // one underline lang, kaya nag-glide siya sa bagong tab
+              <ViewTransition name="nav-underline" share="tab-slide" default="none">
+                <span aria-hidden className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-link" />
+              </ViewTransition>
+            )}
           </Link>
         ))}
       </nav>
@@ -125,6 +137,7 @@ export function AppNav({ home, items, badges, user, logo, logout }: Props) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  transitionTypes={direction(items.indexOf(item))}
                   onClick={() => setOpen(false)}
                   aria-current={current === item.href ? "page" : undefined}
                   className={cn(

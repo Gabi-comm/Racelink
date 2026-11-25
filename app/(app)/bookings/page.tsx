@@ -1,5 +1,4 @@
 import { ReceiptPreview } from "@/components/receipt-preview";
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Receipt } from "lucide-react";
@@ -26,9 +25,7 @@ export default function BookingsPage({ searchParams }: PageProps<"/bookings">) {
         <h1 className={cn(OSWALD, "mt-2 text-5xl font-bold uppercase md:text-6xl")}>My bookings</h1>
         <p className="mt-2 text-muted-foreground">Everything from payment review to race-day bib.</p>
       </div>
-      <Suspense fallback={<div className="h-64 rounded-2xl bg-card ring-1 ring-border" />}>
-        <Bookings searchParams={searchParams} />
-      </Suspense>
+      <Bookings searchParams={searchParams} />
     </div>
   );
 }

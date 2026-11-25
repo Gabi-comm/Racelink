@@ -14,7 +14,7 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
       </Suspense>
       <SiteHeader />
       <main className="flex-1">
-        <ViewTransition>{children}</ViewTransition>
+        <ViewTransition default="page-swap">{children}</ViewTransition>
       </main>
       <SiteFooter />
     </>
