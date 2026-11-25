@@ -26,7 +26,7 @@ export function Hero() {
             <Link href="/login?tab=signup" scroll={false} className={buttonVariants({ size: "lg", className: "h-12 px-6 text-base" })}>
               Create a runner account <ArrowRight aria-hidden />
             </Link>
-            <Link href="/request" className={buttonVariants({ variant: "outline", size: "lg", className: "h-12 px-6 text-base" })}>
+            <Link href="/request" transitionTypes={["page-nav"]} className={buttonVariants({ variant: "outline", size: "lg", className: "h-12 px-6 text-base" })}>
               Request a race
             </Link>
           </div>

@@ -20,6 +20,7 @@ export function HostARace() {
       action={
         <Link
           href="/request"
+          transitionTypes={["page-nav"]}
           className="inline-flex h-11 items-center gap-1.5 rounded-lg bg-primary px-5 text-base font-semibold text-primary-foreground transition-colors outline-none hover:bg-primary-hover focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           Send a request <ArrowRight className="size-4" aria-hidden />

@@ -14,7 +14,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
       <div className="relative mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
-        <Link href="/" aria-label="RaceLink home" className="shrink-0">
+        <Link href="/" transitionTypes={["page-nav"]} aria-label="RaceLink home" className="shrink-0">
           <Logo className="h-11" priority />
         </Link>
         <PublicNav links={LINKS} />

@@ -14,7 +14,8 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
       </Suspense>
       <SiteHeader />
       <main className="flex-1">
-        <ViewTransition default="page-swap">{children}</ViewTransition>
+        {/* page-nav links lang ang nag-a-animate; opening/closing the login modal must not lift the page above it */}
+        <ViewTransition default={{ "page-nav": "page-swap", default: "none" }}>{children}</ViewTransition>
       </main>
       <SiteFooter />
     </>

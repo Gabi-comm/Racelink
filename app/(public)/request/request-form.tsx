@@ -58,7 +58,7 @@ function RequestFormRound({
           <Button type="button" size="lg" className="h-11 gap-1.5 px-5" onClick={() => onAnother(last.current)}>
             <Plus className="size-4" aria-hidden /> Send another request
           </Button>
-          <Link href="/" className={buttonVariants({ variant: "outline", size: "lg", className: "h-11 px-5" })}>
+          <Link href="/" transitionTypes={["page-nav"]} className={buttonVariants({ variant: "outline", size: "lg", className: "h-11 px-5" })}>
             Back to home
           </Link>
         </div>
