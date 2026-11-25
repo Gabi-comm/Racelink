@@ -11,7 +11,7 @@
   overflow: hidden;
   background: #172340;
   /* fallback kapag walang JS */
-  animation: rl-fallback 0.4s ease 3.5s forwards;
+  animation: rl-fallback 0.4s ease 2.5s forwards;
 }
 
 /* flying to a light header: switch to the light logo colors */
@@ -58,28 +58,28 @@
 .rl-intro-r {
   transform-origin: 50% 60%;
   animation-name: rl-r;
-  animation-duration: 0.6s;
+  animation-duration: 0.45s;
   animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .rl-intro-head {
   transform-origin: 50% 50%;
   animation-name: rl-head;
-  animation-duration: 0.55s;
+  animation-duration: 0.4s;
   animation-timing-function: cubic-bezier(0.34, 1.7, 0.64, 1);
 }
 
 .rl-intro-pop {
   transform-origin: 50% 100%;
   animation-name: rl-pop;
-  animation-duration: 0.5s;
+  animation-duration: 0.38s;
   animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .rl-intro-link {
   transform-origin: 50% 50%;
   animation-name: rl-slide;
-  animation-duration: 0.4s;
+  animation-duration: 0.3s;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 

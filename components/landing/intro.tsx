@@ -4,19 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import { LOGO } from "./intro-paths";
 import "./intro.css";
 
-const FLY_AT = 2000;
+const FLY_AT = 1300;
 
 // [shape, class, delay in s]
 const PIECES = [
-  [LOGO.body, "rl-intro-r rl-ink", 0.15],
-  [LOGO.head, "rl-intro-head rl-ink", 0.4],
-  [LOGO.a, "rl-intro-pop rl-ink", 0.6],
-  [LOGO.c, "rl-intro-pop rl-ink", 0.68],
-  [LOGO.e, "rl-intro-pop rl-ink", 0.76],
-  [LOGO.L, "rl-intro-link rl-accent", 0.92],
-  [LOGO.I, "rl-intro-link rl-accent", 0.98],
-  [LOGO.N, "rl-intro-link rl-accent", 1.04],
-  [LOGO.K, "rl-intro-link rl-accent", 1.1],
+  [LOGO.body, "rl-intro-r rl-ink", 0.1],
+  [LOGO.head, "rl-intro-head rl-ink", 0.25],
+  [LOGO.a, "rl-intro-pop rl-ink", 0.38],
+  [LOGO.c, "rl-intro-pop rl-ink", 0.43],
+  [LOGO.e, "rl-intro-pop rl-ink", 0.48],
+  [LOGO.L, "rl-intro-link rl-accent", 0.58],
+  [LOGO.I, "rl-intro-link rl-accent", 0.62],
+  [LOGO.N, "rl-intro-link rl-accent", 0.66],
+  [LOGO.K, "rl-intro-link rl-accent", 0.7],
 ] as const;
 
 // logo pops in piece by piece, then flies to the header logo
@@ -40,7 +40,7 @@ export function Intro() {
       const target = [...document.querySelectorAll<HTMLElement>('header img[alt="RaceLink"]')].find((i) => i.offsetWidth > 0);
       const from = stage.current!.getBoundingClientRect();
       const to = target?.getBoundingClientRect();
-      const ms = fast ? 450 : 850;
+      const ms = fast ? 400 : 650;
 
       if (target && to && to.top >= 0) {
         if (!document.documentElement.classList.contains("dark")) el.classList.add("rl-intro-light");
