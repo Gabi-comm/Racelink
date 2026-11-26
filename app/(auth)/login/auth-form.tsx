@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/c
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordChecklist } from "@/components/password-checklist";
+import { PasswordInput } from "@/components/password-input";
 import { PASSWORD_RULES } from "@/lib/password";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSearchParams } from "next/navigation";
@@ -270,10 +271,9 @@ export function NewPasswordField({ error: serverError }: { error?: string }) {
   return (
     <div className="grid gap-1.5">
       <Label htmlFor={id}>Password</Label>
-      <Input
+      <PasswordInput
         id={id}
         name="password"
-        type="password"
         autoComplete="new-password"
         required
         value={value}
@@ -301,6 +301,8 @@ export function Field({
 }: ComponentProps<typeof Input> & { label: string; name: string; error?: string; hint?: string; action?: ReactNode }) {
   const id = `${useId()}-${name}`;
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
+  // password fields get the show/hide eye button
+  const Control = props.type === "password" ? PasswordInput : Input;
   return (
     <div className="grid gap-1.5">
       {action ? (
@@ -311,7 +313,7 @@ export function Field({
       ) : (
         <Label htmlFor={id}>{label}</Label>
       )}
-      <Input
+      <Control
         id={id}
         name={name}
         required
