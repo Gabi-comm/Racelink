@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { addTransitionType, startTransition, useMemo, useState, ViewTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowRight, ArrowUpRight, CalendarClock, CalendarDays, Clock, FileText, ImageIcon, MapPin, Search, Shirt, Users, X } from "lucide-react";
@@ -59,10 +59,20 @@ export function RaceBrowser({ events, initialEventId, signedIn }: Props) {
     }
   }
 
+  // same cross-fade as the organizer/admin tabs
+  function swap(update: () => void) {
+    startTransition(() => {
+      addTransitionType("tab-switch");
+      update();
+    });
+  }
+
   function clearFilters() {
-    setQuery("");
-    setMonth("");
-    setDistance("");
+    swap(() => {
+      setQuery("");
+      setMonth("");
+      setDistance("");
+    });
   }
 
   if (events.length === 0) {
@@ -92,7 +102,10 @@ export function RaceBrowser({ events, initialEventId, signedIn }: Props) {
           <span className="sr-only">Month</span>
           <select
             value={month}
-            onChange={(e) => setMonth(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              swap(() => setMonth(v));
+            }}
             className="h-12 w-full rounded-xl border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <option value="">Any month</option>
@@ -111,14 +124,19 @@ export function RaceBrowser({ events, initialEventId, signedIn }: Props) {
                 key={d || "all"}
                 type="button"
                 aria-pressed={distance === d}
-                onClick={() => setDistance(d)}
+                onClick={() => distance !== d && swap(() => setDistance(d))}
                 className={cn(
-                  "h-12 min-w-14 rounded-xl border px-4 text-sm font-bold uppercase transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                  "relative isolate h-12 min-w-14 rounded-xl border px-4 text-sm font-bold uppercase transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                   distance === d
-                    ? "border-brand-deep bg-brand-deep text-white [html.dark_&]:border-primary [html.dark_&]:bg-primary [html.dark_&]:text-primary-foreground"
+                    ? "border-transparent text-white [html.dark_&]:text-primary-foreground"
                     : "border-input bg-background hover:bg-muted",
                 )}
               >
+                {distance === d && (
+                  <ViewTransition name="tabs-race-distance" share="tab-slide" default="none">
+                    <span aria-hidden className="absolute -inset-px -z-10 rounded-xl bg-brand-deep [html.dark_&]:bg-primary" />
+                  </ViewTransition>
+                )}
                 {d || "All"}
               </button>
             ))}
